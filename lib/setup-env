@@ -1,0 +1,128 @@
+#!/bin/bash
+
+# setup-env: Set up the test environment
+# Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
+
+
+enforce_arguments() {
+  if [[ -z "${ROLESPEC_TRAVIS}" && -z "${ROLESPEC_ROLE_SOURCE}" ]]; then
+    error "A suitable role was not found, try running 'rolespec -h' for help"
+  fi
+}
+
+enforce_rolespec_directory() {
+  # Exit if we are outside of a RoleSpec working directory
+  if [[ -z "${ROLESPEC_RUNTIME}" ]]; then
+    error "Not a RoleSpec working directory"
+  fi
+}
+
+enforce_test_exists() {
+  if [ ! -f "${ROLESPEC_SCRIPT}" ]; then
+    error "Test script not found:\n${ROLESPEC_SCRIPT}\n"
+  fi
+}
+
+clone_url() {
+  if [[ -n "${ROLESPEC_TRAVIS}" ]]; then
+    rolespec_run "Git clone ${ROLESPEC_ROLE_SOURCE}"
+
+    # Avoid clone path conflicts
+    if [[ -d "${ROLESPEC_TRAVIS_TESTS}" ]]; then
+      rm -rf "${ROLESPEC_TRAVIS_TESTS}"
+      mkdir -p "${ROLESPEC_TRAVIS_TESTS}"
+    fi
+
+    git clone --depth 1 "${ROLESPEC_ROLE_SOURCE}" "${ROLESPEC_TRAVIS_TESTS}"
+    echo
+  fi
+}
+
+inject_placeholders() {
+  local playbook_directory="$(dirname "${ROLESPEC_PLAYBOOK}")"
+
+  if [ ! -d "${playbook_directory}" ]; then
+    mkdir -p "${playbook_directory}"
+  fi
+
+  # Replace the placeholder fqdn in the hosts file
+  sed -i "s/placeholder_fqdn/${ROLESPEC_FQDN}/g" "${ROLESPEC_HOSTS}"
+
+  local playbook_content="$(cat <<EOF
+---
+
+- hosts: '${ROLESPEC_FQDN}'
+  sudo: true
+
+  roles:
+    - role: '${ROLESPEC_ROLE}'
+EOF
+)"
+
+  # Only create a playbook file if it doesn't exist
+  if [ -f "${ROLESPEC_PLAYBOOK}" ]; then
+    ROLESPEC_PLAYBOOK_CUSTOM=true
+  else
+    echo "${playbook_content}" > "${ROLESPEC_PLAYBOOK}"
+  fi
+}
+
+run_common_tasks() {
+  if [[ -z "${ROLESPEC_TURBO_MODE}" ]]; then
+    local update_file="/var/lib/apt/periodic/update-stamp"
+
+    # Only run apt-get update when it is stale
+    if [[ -f "${update_file}" ]]; then
+      local now_epoch="$(date "+%s")"
+      local last_update_epoch="$(date "+%s" -d "$(stat -c %y /var/lib/apt/periodic/update-stamp)")"
+      local time_difference=$((now_epoch - last_update_epoch))
+    else
+      local time_difference=999999
+    fi
+
+    if [[ ${time_difference} -gt 86400 ]]; then
+      rolespec_run "Run apt-get update silently"
+      sudo apt-get -qq update
+    fi
+
+    rolespec_run "Create SSH key/pair and add ourselves to the known hosts"
+    echo -e "y\n" | ssh-keygen -t rsa -P "" -f "${HOME}/.ssh/id_rsa"
+    ssh-keyscan "${ROLESPEC_FQDN}" > ~/.ssh/known_hosts
+
+    rolespec_run "Create global git user"
+    git config --global user.email "test@user.com" && git config --global user.name "Hi"
+    echo -e "test@user.com => Hi\n"
+  fi
+}
+
+presetup() {
+  enforce_arguments
+  enforce_rolespec_directory
+
+  if [[ -n "$ROLESPEC_TRAVIS" ]]; then
+    clone_url
+  else
+    enforce_test_exists
+  fi
+}
+
+setup() {
+  rolespec_run "Running tests on ${ROLESPEC_ROLE}"
+
+  inject_placeholders
+  run_common_tasks
+}
+
+teardown() {
+  # Replace the real fqdn back to the placeholder fqdn
+  sed -i "s/${ROLESPEC_FQDN}/placeholder_fqdn/g" "${ROLESPEC_HOSTS}"
+
+  # Always delete the playbook, unless it's custom
+  if [[ -z "${ROLESPEC_PLAYBOOK_CUSTOM}" ]]; then
+    rm -rf "${ROLESPEC_PLAYBOOK}"
+  fi
+
+  if [[ -z "${ROLESPEC_TURBO_MODE}" ]]; then
+    rm -rf "${ROLESPEC_ANSIBLE_CONFIG}"
+  fi
+}

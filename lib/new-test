@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# new-test: Create a new test case
+# Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
+
+
+new_test() {
+	local path="${PWD}/${1}"
+
+	if [[ -d ${path} ]]; then
+		error "Path already exists: ${path}"
+	fi
+
+	mkdir -p "${path}/inventory/group_vars"
+	echo "placeholder_fqdn" > "${path}/inventory/hosts"
+
+	local test="$(cat <<EOF
+# The file must be declared as /bin/bash
+#!/bin/bash
+
+
+# This gives you access to the custom DSL
+. "\${ROLESPEC_LIB}/main"
+
+
+# Everything past this point is the custom DSL which is optional
+
+# Install a specific version of Ansible, you can
+# omit the version to install devel (latest unstable)
+install_ansible "v1.7.1"
+
+
+# An assertion which does the following:
+#   - Syntax check on the playbook
+#   - Run the playbook
+assert_playbook_runs
+
+# An assertion that re-runs the playbook checking for no changes
+assert_playbook_idempotent
+
+# This is where you would add more assert statements for a "real" role
+# Check https://github.com/nickjj/rolespec/README.rst#the-test-api for details
+#
+# You are also not limited to the test API, you can write any scripts you want
+EOF
+	)"
+
+	echo "${test}" > "${path}/test"
+	chmod +x "${path}/test"
+
+	echo "Initialized new test case in ${path}"
+}

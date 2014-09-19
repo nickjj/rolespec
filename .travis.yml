@@ -1,0 +1,4 @@
+---
+
+script:
+  - 'tests/test-cli'

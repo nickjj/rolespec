@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# system: System helpers RoleSpec's bash DSL
+# Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
+
+
+install() {
+  if [[ -z "${ROLESPEC_TURBO_MODE}" ]]; then
+    rolespec_run "Install apt packages"
+    echo
+    sudo apt-get -yq install "${@}"
+  fi
+}
+
+purge() {
+  if [[ -z ${ROLESPEC_TURBO_MODE} ]]; then
+    rolespec_run "Purge apt packages"
+    echo
+    sudo apt-get -yq --purge remove "${@}" 2> /dev/null
+  fi
+}
+
+start() {
+  if [[ -z "${ROLESPEC_TURBO_MODE}" ]]; then
+    rolespec_run "Start running proccess"
+    echo
+    sudo /etc/init.d/"${1}" start 2> /dev/null
+  fi
+}
+
+stop() {
+  if [[ -z "${ROLESPEC_TURBO_MODE}" ]]; then
+    rolespec_run "Stop running proccess"
+    echo
+    sudo /etc/init.d/"${1}" stop 2> /dev/null
+  fi
+}

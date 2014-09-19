@@ -1,0 +1,107 @@
+#!/bin/bash
+
+# base: Base assertions for RoleSpec's bash DSL
+# Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
+
+
+. "${ROLESPEC_LIB}/ui"
+
+pass() {
+  printf "\n%s: [%s | %s]\n%s: %s\n\n%s:\n%s\n\n" \
+    "$(notify "TEST" 1)" \
+    "${1}" \
+    "$(test_pass "PASS" 1)" \
+    "$(warn "found")" \
+    "${2}" \
+    "$(warn "in output")" \
+    "${3}"
+}
+
+fail() {
+  printf "\n%s: [%s | %s]\n%s: %s\n\n%s:\n%s\n\n" \
+    "$(notify "TEST" 1)" \
+    "${1}" \
+    "$(test_fail "FAIL" 1)" \
+    "$(warn "expected")" \
+    "${2}" \
+    "$(warn "in output")" \
+    "${3}"
+
+  exit 1
+}
+
+assert_in() {
+  # A more efficient and robust way of piping input,
+  # the alternative is 'echo ${1} | grep ...' but it has pitfalls
+  local line="$(grep -Em1 -e "${2}" <<< "${1}")"
+
+  if [[ "${3}" == "!" ]]; then
+    if [[ ! $1 =~ $2 ]]; then
+      pass "Not in output" "${2}" "${line}"
+    else
+      fail "Not in output" "${2}" "${1}"
+    fi
+  else
+    if [[ ${1} =~ ${2} ]]; then
+      pass "In output" "${2}" "${line}"
+    else
+      fail "In output" "${2}" "${1}"
+    fi
+  fi
+}
+
+assert_in_file() {
+  local line_match="$(sudo grep -Em1 -e "${2}" "${1}")"
+  local filename="$(basename "${1}")"
+
+  if sudo [ ! -f "${1}" -a ! -L "${1}" ]; then
+    error "${1} is not a file or a symlink to a file"
+  fi
+
+  if [[ "${3}" == "!" ]]; then
+    sudo grep -E -q "${2}" "${1}" \
+    && (fail "Not in file '${filename}'" "${2}" "${1}") \
+    || (pass "Not in file '${filename}'" "${2}" "${line_match}")
+  else
+    sudo grep -E -q "${2}" "${1}" \
+    && (pass "In file '${filename}'" "${2}" "${line_match}") \
+    || (fail "In file '${filename}'" "${2}" "${1}")
+  fi
+}
+
+assert_path() {
+  assert_in "$(sudo stat "${1}")" "Size:" "${2}"
+}
+
+assert_permission() {
+  assert_in "$(sudo stat -c "%a %c" "${1}")" "${2}" "${3}"
+}
+
+assert_group() {
+  for i in "${@}"; do
+    assert_in "$(getent group)" "${i}"
+  done
+}
+
+assert_user_in_group() {
+  assert_in "$(groups ${1})" "${2}" "${3}"
+}
+
+assert_running() {
+  assert_in "$(ps cax)" "${1}" "${2}"
+}
+
+assert_monitoring() {
+  assert_in "$(sudo monit status)" "${1}" "${2}"
+}
+
+assert_iptables_allow() {
+  assert_in "$(sudo iptables --list)" "${1}.*ACCEPT" "${2}"
+}
+
+assert_url() {
+  local response_code=${2:-200}
+
+  assert_in "$(curl -k -s -o /dev/null -w '%{http_code}' ${1})" \
+             "${response_code}" "${3}"
+}

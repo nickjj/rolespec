@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# config: Configuration settings for the RoleSpec script
+# Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
+# Part of the DebOps project - http://debops.org
+
+
+# ---- Functions ----
+
+find_up () {
+  # Traverse backwards appending ../ to the path until we find a RoleSpec
+  # working directory or hit the root of the file system
+  local slashes="${PWD//[^\/]/}"
+  local directory="${PWD}"
+
+  for (( n="${#slashes}"; n>0; --n )) ; do
+    [[ -d "${directory}/tests" && -d "${directory}/roles" ]] && \
+      echo "${directory}" && return
+    directory="$directory/.."
+  done
+}
+
+
+# ---- Configuration ----
+
+# Information
+ROLESPEC_RELEASE_NAME="$(lsb_release -a 2>/dev/null | tail -n 1 | awk '{print $2}')"
+ROLESPEC_FQDN="$(hostname -f)"
+
+# Load the VERSION file from the correct path
+if [[ -f "${ROLESPEC_LIB}/VERSION" ]]; then
+  ROLESPEC_VERSION="$(cat "${ROLESPEC_LIB}/VERSION")"
+else
+  ROLESPEC_VERSION="$(cat "VERSION")"
+fi
+
+# Default environment variables
+ROLESPEC_TEST_SELF="${ROLESPEC_TEST_SELF}"
+
+# Set the runtime path based on what env RoleSpec is being ran under
+if [[ -n "${ROLESPEC_TEST_SELF}" ]]; then
+  ROLESPEC_RUNTIME="/tmp/rolespec/test_self"
+elif [[ -n "${ROLESPEC_TRAVIS}" ]]; then
+  ROLESPEC_RUNTIME="$(pwd)"
+else
+  ROLESPEC_RUNTIME="$(find_up)"
+fi
+
+# Working paths
+ROLESPEC_ROLES="${ROLESPEC_RUNTIME}/roles"
+ROLESPEC_TESTS="${ROLESPEC_RUNTIME}/tests"
+ROLESPEC_TRAVIS_TESTS="${ROLESPEC_RUNTIME}/travis/tests"
+
+# Test paths
+ROLESPEC_HOSTS="inventory/hosts"
+ROLESPEC_META="meta/main.yml"
+ROLESPEC_PLAYBOOK="playbooks/test.yml"
+
+# Ansible configuration
+ROLESPEC_ANSIBLE_SOURCE="https://github.com/ansible/ansible"
+ROLESPEC_ANSIBLE_INSTALL="/tmp/ansible"
+ROLESPEC_ANSIBLE_CONFIG="$(pwd)/ansible.cfg"
+ROLESPEC_ANSIBLE_ROLES="${ROLESPEC_ROLES}${ROLESPEC_TRAVIS_ROLES_PATH}"
+
+# Test DSL helpers
+ROLESPEC_POSTGRESQL_LIBS="postgresql libpq-dev libpq5 postgresql-client-common
+                          postgresql-common"
+ROLESPEC_MYSQL_LIBS="mysql-common mysql-server-5.5 mysql-server-core-5.5
+                     mysql-client-5.5 mysql-client-core-5.5"

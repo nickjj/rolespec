@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# init: Init a new working directory for RoleSpec
+# Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
+
+
+init() {
+	local path="${PWD}/${1}"
+
+	if [[ -d ${path} ]]; then
+		error "Path already exists: ${path}"
+	fi
+
+	mkdir -p "${path}/tests"
+	mkdir -p "${path}/roles"
+
+	echo "Initialized new RoleSpec directory in ${path}"
+}

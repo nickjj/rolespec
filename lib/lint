@@ -1,0 +1,132 @@
+#!/bin/bash
+
+# lint: A test syntax checker and linter for RoleSpec tests
+# Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
+
+
+set_lint_path() {
+  if [[ -n "${ROLESPEC_TRAVIS}" ]]; then
+    ROLESPEC_LINT="${ROLESPEC_TRAVIS_TESTS}"
+  else
+    ROLESPEC_LINT="${ROLESPEC_TESTS}"
+  fi
+}
+
+verify_lint_path() {
+  set_lint_path
+
+  if [[ ! -d "${ROLESPEC_LINT}" ]]; then
+    # Exit if we are outside of a RoleSpec working directory
+    if [[ -z "${ROLESPEC_RUNTIME}" ]]; then
+      error "Not a RoleSpec working directory"
+    fi
+  fi
+
+  if [[ "$(ls "${ROLESPEC_LINT}")" ]]; then
+    parse_syntax
+    parse_tests
+  fi
+}
+
+parse_syntax() {
+  ls "${ROLESPEC_LINT}" | while read test; do
+    local test_path="${ROLESPEC_LINT}/${test}/test"
+
+    # Perform a syntax check
+    if [[ -f "${test_path}" ]]; then
+      bash -n "${test_path}"
+    fi
+  done
+}
+
+parse_tests() {
+  ls "${ROLESPEC_LINT}" | while read test; do
+    local hosts_path="${ROLESPEC_LINT}/${test}/${ROLESPEC_HOSTS}"
+    local test_path="${ROLESPEC_LINT}/${test}/test"
+
+    validate_path "${hosts_path}"
+    parse_hosts "${hosts_path}"
+
+    validate_path "${test_path}"
+    parse_test "${test_path}"
+
+    check_yaml_dashes "${ROLESPEC_LINT}/${test}"
+  done
+}
+
+validate_path() {
+  ROLESPEC_LINT_FILENAME="$(basename "${1}")"
+  ROLESPEC_LINT_FILENAME_DIRNAME="$(dirname "${1}")"
+  ROLESPEC_LINT_ROLE="$(basename "${ROLESPEC_LINT_FILENAME_DIRNAME}")"
+
+  if [[ ! -f "${1}" ]]; then
+    validate_error "file (run: touch ${ROLESPEC_LINT_FILENAME})" "MISSING" \
+      "[$(info "${ROLESPEC_LINT_ROLE}")] ${ROLESPEC_LINT_FILENAME}"
+    exit 1
+  fi
+}
+
+parse_hosts() {
+  local placeholder="$(fgrep "placeholder_fqdn" "${1}" | wc -l)"
+  local open_brackets="$(fgrep "[" "${1}" | wc -l)"
+  local closed_brackets="$(fgrep "]" "${1}" | wc -l)"
+
+  if [[ ! "${open_brackets}" -eq "${closed_brackets}" ]]; then
+    validate_error "open/close count mismatch" "BRACKET" \
+      "[$(info "${ROLESPEC_LINT_ROLE}")] hosts"
+    exit 1
+  fi
+
+  print_msg "${placeholder}" "error" "placeholder_fqdn" "MISSING" "hosts"
+}
+
+parse_test() {
+  set +e
+  local bash_header="$(grep -c "^#!/bin/bash" "${1}")"
+  local copyright_header="$(grep -c "^# Copyright" "${1}")"
+  local source_test="$(grep -c "^. \"\${ROLESPEC_LIB}/main\"" "${1}")"
+  local install_test="$(grep -c "^install_ansible" "${1}")"
+  local playbook_runs="$(grep -c "^assert_playbook_runs" "${1}")"
+  local playbook_idempotent="$(grep -c "^assert_playbook_idempotent" "${1}")"
+  set -e
+
+  local permission="$(stat -c "%a %n" "${1}" | awk '{print $1}')"
+
+  if [[ ! "${permission}" -eq 755 ]]; then
+    validate_error "permission (run: chmod 755)" "INVALID" \
+      "[$(info "${ROLESPEC_LINT_ROLE}")] test"
+    exit 1
+  fi
+
+  print_msg "${bash_header}" "error" "#!/bin/bash" "MISSING"
+  print_msg "${copyright_header}" "warn" "# Copyright ..." "MISSING" 
+  print_msg "${source_test}" "error" ". \"\${ROLESPEC_LIB}/main\"" "MISSING" 
+  print_msg "${install_test}" "error" "install_ansible" "MISSING" 
+  print_msg "${playbook_runs}" "warn" "assert_playbook_runs" "MISSING"
+  print_msg "${playbook_idempotent}" "warn" "assert_playbook_idempotent" "MISSING"
+}
+
+check_yaml_dashes() {
+  local yaml_files="$(find "${1}" -name *.yml 2> /dev/null | wc -l)"
+  local dashes="$(grep -R "^\-\-\-$" "${1}" 2> /dev/null | wc -l)"
+  local difference=$((${yaml_files} - ${dashes}))
+
+  if [[ ! "${yaml_files}" -eq "${dashes}" ]]; then
+    validate_warn "--- in ${difference} yaml file(s)" "MISSING" \
+      "[$(info "${ROLESPEC_LINT_ROLE}")] yaml"
+  fi
+}
+
+print_msg() {
+  local file="${5-test}"
+
+  if [[ "${1}" -eq 0 ]]; then
+    printf "[%s] %s\n" \
+      "$(info "${ROLESPEC_LINT_ROLE}")" \
+      "$("validate_${2}" "${3}" "${4}" "${file}")"
+
+    if [[ "${2}" == "error" ]]; then
+      exit 1
+    fi
+  fi
+}

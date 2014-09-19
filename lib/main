@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# main: Entry point for the end user's test script
+# Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
+
+
+. "${ROLESPEC_LIB}/dsl/base"
+. "${ROLESPEC_LIB}/dsl/ansible"
+. "${ROLESPEC_LIB}/dsl/system"

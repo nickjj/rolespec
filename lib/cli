@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# cli: Parse the arguments of the RoleSpec script
+# Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
+
+
+ROLESPEC_HELP="$(cat <<EOF
+Usage:
+  -i <path>               create a RoleSpec working directory
+  -n <path>               create a new test case
+  -r <role name / url>    role name / url of your test suite when using Travis
+  -t                      turbo mode           => default: false
+  -p                      playbook mode        => default: false
+  -l                      run a syntax check / linter on your tests
+  -v                      show the version number
+
+  Are you running this locally or any non-Travis environment?
+
+      Command: $ rolespec -r rolename
+    Role path: $ROLESPEC_ROLES/galaxyname.rolename
+    Test path: $ROLESPEC_TESTS/repoprefix-rolename
+
+  Are your tests running on Travis?
+
+    https://github.com/nickjj/rolespec/README.rst#installation
+EOF
+)"
+
+while getopts ":i:n:r:tplhv" opt; do
+  case "${opt}" in
+    i)
+      . "${ROLESPEC_LIB}/init"
+      init "${OPTARG}"
+      exit 0
+      ;;
+    n)
+      . "${ROLESPEC_LIB}/new-test"
+      new_test "${OPTARG}"
+      exit 0
+      ;;
+    r)
+      ROLESPEC_ROLE_SOURCE="${OPTARG}"
+      ;;
+    t)
+      ROLESPEC_TURBO_MODE=true
+      ;;
+    p)
+      ROLESPEC_TURBO_MODE=true
+      ROLESPEC_PLAYBOOK_MODE=true
+      ;;
+    l)
+      . "${ROLESPEC_LIB}/lint"
+      verify_lint_path
+      exit 0
+      ;;
+    h)
+      echo "${ROLESPEC_HELP}"
+      exit 0
+      ;;
+    v)
+      echo "$(basename "${0}") ${ROLESPEC_VERSION}"
+      exit 0
+      ;;
+    \?)
+      error "Invalid option: -${OPTARG}"
+      ;;
+    :)
+      error "Option requires an argument: -${OPTARG}"
+  esac
+done

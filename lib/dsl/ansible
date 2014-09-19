@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# Ansible: Ansible assertions for RoleSpec's bash DSL
+# Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
+
+
+install_ansible() {
+  # Install Ansible
+  if [[ -z "${ROLESPEC_TURBO_MODE}" ]]; then
+    local branch="${1:-devel}"
+
+    rolespec_run "Install Ansible - ${branch}"
+
+    sudo apt-get install -yq python-yaml python-jinja2 python-nose \
+                             python-passlib python-crypto
+
+    # Avoid a clone error from the directory already existing
+    if [ -d "${ROLESPEC_ANSIBLE_INSTALL}" ]; then
+      rm -rf "${ROLESPEC_ANSIBLE_INSTALL}"
+    fi
+
+    git clone --depth 1 --branch "${branch}" \
+              "${ROLESPEC_ANSIBLE_SOURCE}" "${ROLESPEC_ANSIBLE_INSTALL}"
+  fi
+
+  # Fix the paths for the Ansible binaries
+  . "${ROLESPEC_ANSIBLE_INSTALL}/hacking/env-setup"
+
+  printf "[defaults]\nhostfile = %s\nroles_path = %s\n" \
+    "${ROLESPEC_HOSTS}" \
+    "${ROLESPEC_ANSIBLE_ROLES}" \
+    > "${ROLESPEC_ANSIBLE_CONFIG}"
+
+  ansible --version
+  echo
+
+  # Auto resolve dependencies
+  if [[ -f "${ROLESPEC_META}" && -n "${ROLESPEC_TRAVIS}" ]]; then
+    # Space separated list of unique dependencies in Galaxy format
+    local dependencies="$(grep "\- role: " "${ROLESPEC_META}" | sed -e "s/^[ \t]*//" \
+                    | awk '{print $3}' | uniq | tr '\n' ' ')"
+
+    if [[ -n "${dependencies}" ]]; then
+      echo
+      rolespec_run "Galaxy install role dependencies"
+      ansible-galaxy install -f ${dependencies}
+    fi
+  fi
+}
+
+assert_ansible_syntax() {
+  if [[ -z "${ROLESPEC_TURBO_MODE}" || -n "${ROLESPEC_PLAYBOOK_MODE}" ]]; then
+    ansible_run "Run playbook syntax check"
+    ansible-playbook "${ROLESPEC_PLAYBOOK}" "${@}" --syntax-check
+  fi
+}
+
+assert_ansible_run() {
+  if [[ -z "${ROLESPEC_TURBO_MODE}" || -n "${ROLESPEC_PLAYBOOK_MODE}" ]]; then
+    ansible_run "Run playbook"
+    ansible-playbook "${ROLESPEC_PLAYBOOK}" "${@}" --connection=local
+  fi
+}
+
+assert_playbook_idempotent() {
+  if [[ -z "${ROLESPEC_TURBO_MODE}" ]]; then
+    ansible_run "Re-run playbook"
+    assert_in "$(ansible-playbook "${ROLESPEC_PLAYBOOK}" "${@}" --connection=local)" \
+               "changed=0.*failed=0"
+  fi
+}
+
+assert_playbook_runs() {
+  assert_ansible_syntax "${@}"
+  assert_ansible_run "${@}"
+}

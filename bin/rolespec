@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# rolespec: A shell based test library for Ansible
+# Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
+
+
+set -e
+
+# Travis detection
+if [[ -n "${TRAVIS_REPO_SLUG}" ]]; then
+  ROLESPEC_ROLE="${TRAVIS_REPO_SLUG}"
+  ROLESPEC_TRAVIS=true
+  ROLESPEC_TRAVIS_ROLES_PATH=":$(dirname "${TRAVIS_BUILD_DIR}")"
+fi
+
+# Set the lib path based on how RoleSpec is being ran
+if [[ -n "${ROLESPEC_TRAVIS}" || "${ROLESPEC_TEST_SELF}" ]]; then
+  ROLESPEC_LIB="lib"
+else
+  ROLESPEC_LIB="/usr/local/lib/rolespec"
+fi
+
+. "${ROLESPEC_LIB}/ui"
+. "${ROLESPEC_LIB}/config"
+. "${ROLESPEC_LIB}/cli"
+. "${ROLESPEC_LIB}/setup-env"
+
+enforce_working_directories() {
+  if [[ -n "${ROLESPEC_TRAVIS}" ]]; then
+    # Ensure the roles paths exist when running on Travis
+    if [[ ! -d "${ROLESPEC_ROLES}" ]]; then
+      mkdir -p "${ROLESPEC_ROLES}"
+    fi
+  fi
+}
+
+set_role_name() {
+  if [[ -n "${ROLESPEC_TRAVIS}" ]]; then
+    ROLESPEC_ROLE="$(basename "${TRAVIS_REPO_SLUG}")"
+  else
+    ROLESPEC_ROLE_NAME="${ROLESPEC_ROLE_SOURCE}"
+    ROLESPEC_ROLE="$(ls "${ROLESPEC_ROLES}" | grep "${ROLESPEC_ROLE_NAME}")"
+  fi
+}
+
+set_dynamic_paths() {
+  if [[ -n "${ROLESPEC_TRAVIS}" ]]; then
+    ROLESPEC_TEST="${ROLESPEC_TRAVIS_TESTS}/${ROLESPEC_ROLE}"
+    ROLESPEC_META="${TRAVIS_BUILD_DIR}/${ROLESPEC_META}"
+  else
+    ROLESPEC_TEST="${ROLESPEC_TESTS}/$(ls "${ROLESPEC_TESTS}" | \
+                   grep "${ROLESPEC_ROLE_NAME}")"
+    ROLESPEC_META="${ROLESPEC_TEST}/${ROLESPEC_META}"
+  fi
+
+  # Overwrite the config variables with the full path
+  ROLESPEC_HOSTS="${ROLESPEC_TEST}/${ROLESPEC_HOSTS}"
+  ROLESPEC_PLAYBOOK="${ROLESPEC_TEST}/${ROLESPEC_PLAYBOOK}"
+  ROLESPEC_SCRIPT="${ROLESPEC_TEST}/test"
+}
+
+# Perform pre-setup tasks to set variables
+enforce_working_directories
+set_role_name
+set_dynamic_paths
+presetup
+
+# Make these variables available in the test code itself
+export ROLESPEC_ANSIBLE_INSTALL
+export ROLESPEC_ANSIBLE_SOURCE
+export ROLESPEC_ANSIBLE_ROLES
+export ROLESPEC_ANSIBLE_CONFIG
+
+export ROLESPEC_LIB
+export ROLESPEC_VERSION
+export ROLESPEC_RELEASE_NAME
+export ROLESPEC_FQDN
+export ROLESPEC_TRAVIS
+export ROLESPEC_TRAVIS_ROLES_PATH
+export ROLESPEC_TURBO_MODE
+export ROLESPEC_PLAYBOOK_MODE
+export ROLESPEC_ROLES
+export ROLESPEC_ROLE
+export ROLESPEC_ROLE_NAME
+export ROLESPEC_TEST
+export ROLESPEC_HOSTS
+export ROLESPEC_META
+export ROLESPEC_PLAYBOOK
+export ROLESPEC_SCRIPT
+export ROLESPEC_POSTGRESQL_LIBS
+export ROLESPEC_MYSQL_LIBS
+
+# Run the test
+setup
+"${ROLESPEC_SCRIPT}"
+teardown
