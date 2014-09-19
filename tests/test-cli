@@ -7,6 +7,7 @@
 ROLESPEC_TEST_SELF_RUNTIME="/tmp/rolespec/test_self"
 ROLESPEC_TEST_SELF_ROLE="testrole"
 ROLESPEC_TEST_SELF_MONIT="$(sudo dpkg -s monit ; echo "$?")"
+ROLESPEC_TEST_SELF_SERVER=""
 
 setup_test() {
   if [[ -d "${ROLESPEC_TEST_SELF_RUNTIME}" ]]; then
@@ -38,6 +39,7 @@ EOF
 
   # Start a simple server for the url assertion tests.
   python -m SimpleHTTPServer > /dev/null 2>&1 &
+  ROLESPEC_TEST_SELF_SERVER="${!}"
 
   create_test_role
   create_test_script
@@ -110,7 +112,7 @@ teardown_test() {
     sudo apt-get -yq --purge remove monit 2> /dev/null
   fi
 
-  pkill "SimpleHTTPServer"
+  kill -9 "${ROLESPEC_TEST_SELF_SERVER}"
 }
 
 setup_test

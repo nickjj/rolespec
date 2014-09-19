@@ -1,6 +1,11 @@
 RoleSpec changelog
 ==================
 
+v0.3.2 / 2014-09-19
+~~~~~~~~~~~~~~~~~~~
+
+- Fix the test harness from exiting with 1
+
 v0.3.1 / 2014-09-19
 ~~~~~~~~~~~~~~~~~~~
 
