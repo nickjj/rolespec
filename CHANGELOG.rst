@@ -2,6 +2,7 @@ RoleSpec changelog
 ==================
 
 v0.3.1 / 2014-09-19
+~~~~~~~~~~~~~~~~~~~
 
 - Fix a bug in the test harness (does not affect RoleSpec itself)
 

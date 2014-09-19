@@ -81,8 +81,8 @@ assert_playbook_idempotent
 
 # ---- Basic assertions ----
 
-assert_in "\$(sudo service --status-all)" "networking"
-assert_in "\$(sudo service --status-all)" "galvonichorseshoecrabeyelash" !
+assert_in "\$(ls /)" "etc"
+assert_in "\$(ls /)" "galvonichorseshoecrabeyelash" !
 assert_in_file "/etc/debian_version" "."
 assert_in_file "/etc/debian_version" "steakhelicopterpants" !
 assert_path "/etc/debian_version"
