@@ -19,7 +19,7 @@ install_ansible() {
       rm -rf "${ROLESPEC_ANSIBLE_INSTALL}"
     fi
 
-    git clone --depth 1 --branch "${branch}" \
+    git clone --depth 1 --recursive --branch "${branch}" \
               "${ROLESPEC_ANSIBLE_SOURCE}" "${ROLESPEC_ANSIBLE_INSTALL}"
   fi
 
