@@ -61,6 +61,10 @@ EOF
 
   # Only create a playbook file if it doesn't exist
   if [ -f "${ROLESPEC_PLAYBOOK}" ]; then
+
+    # Replace the placeholder fqdn in the custom playbook
+    sed -i "s/placeholder_fqdn/${ROLESPEC_FQDN}/g" "${ROLESPEC_PLAYBOOK}"
+
     ROLESPEC_PLAYBOOK_CUSTOM=true
   else
     echo "${playbook_content}" > "${ROLESPEC_PLAYBOOK}"
