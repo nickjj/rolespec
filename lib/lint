@@ -33,13 +33,22 @@ verify_lint_path() {
 
 list_tests() {
     local test
+    local found=
     # search for tests in sub-directories
     find "${ROLESPEC_LINT}" -mindepth 1 -maxdepth 1 -type d | \
     while read test; do
 	if [ -f "${test}/test" ] ; then
+	    found=1
 	    echo "${test}"
 	fi
     done
+    # if no tests in sub-directories are found, look in "ROLESPEC_RUNTIME"
+    if [ -z "$found" ] ; then
+	test="${ROLESPEC_LINT}"
+	if [ -f "${test}/test" ] ; then
+	    echo "${test}"
+	fi
+    fi
 }
 
 parse_syntax() {
