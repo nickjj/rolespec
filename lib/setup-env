@@ -90,7 +90,9 @@ run_common_tasks() {
     fi
 
     rolespec_run "Create SSH key/pair and add ourselves to the known hosts"
-    echo -e "y\n" | ssh-keygen -t rsa -P "" -f "${HOME}/.ssh/id_rsa"
+    if [ ! -f  ~/.ssh/id_rsa ] ; then
+	echo -e "y\n" | ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa
+    fi
     ssh-keyscan "${ROLESPEC_FQDN}" > ~/.ssh/known_hosts
 
     rolespec_run "Create global git user"
