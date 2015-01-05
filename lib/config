@@ -14,8 +14,11 @@ find_up () {
   local directory="${PWD}"
 
   for (( n="${#slashes}"; n>0; --n )) ; do
-    [[ -d "${directory}/tests" && -d "${directory}/roles" ]] && \
-      echo "${directory}" && return
+    if [ -f "${directory}/.rolespec.cfg" -o \
+	 -d "${directory}/tests" -a -d "${directory}/roles" ] ; then
+	echo "${directory}"
+	return
+    fi
     directory="$directory/.."
   done
 }
@@ -67,3 +70,7 @@ ROLESPEC_POSTGRESQL_LIBS="postgresql libpq-dev libpq5 postgresql-client-common
                           postgresql-common"
 ROLESPEC_MYSQL_LIBS="mysql-common mysql-server-5.5 mysql-server-core-5.5
                      mysql-client-5.5 mysql-client-core-5.5"
+
+if [ -f "$ROLESPEC_RUNTIME/.rolespec.cfg" ] ; then
+    source "$ROLESPEC_RUNTIME/.rolespec.cfg"
+fi
