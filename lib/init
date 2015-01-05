@@ -20,10 +20,11 @@ init() {
 
 	[ ! -e "${path}/.rolespec.cfg" ] && cat > "${path}/.rolespec.cfg" <<EOF
 # You custom configuration should only apply when not running in travis
-if [[ -z "\${ROLESPEC_TRAVIS}" ]]; then
+if [ -z "\${ROLESPEC_TRAVIS}" ] ; then
     # Put your configuration here
     # Example:
     # ROLESPEC_ANSIBLE_ROLES="\${ROLESPEC_ANSIBLE_ROLES}:/path/to/my/roles"
+    :
 fi
 EOF
 	echo "Initialized new RoleSpec directory in ${path}"
