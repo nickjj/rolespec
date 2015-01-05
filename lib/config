@@ -14,8 +14,11 @@ find_up () {
   local directory="${PWD}"
 
   for (( n="${#slashes}"; n>0; --n )) ; do
-    [[ -d "${directory}/tests" && -d "${directory}/roles" ]] && \
-      echo "${directory}" && return
+    if [ -f "${directory}/.rolespec.cfg" -o \
+	 -d "${directory}/tests" -a -d "${directory}/roles" ] ; then
+	echo "${directory}"
+	return
+    fi
     directory="$directory/.."
   done
 }
