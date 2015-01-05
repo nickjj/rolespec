@@ -5,7 +5,7 @@
 
 
 init() {
-	local path="${PWD}/${1}"
+	local path=$(realpath -ms "${1}")
 
 	if [[ -d ${path} ]]; then
 		error "Path already exists: ${path}"
