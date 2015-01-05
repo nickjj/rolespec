@@ -26,6 +26,8 @@ verify_lint_path() {
   if [ -n "$tests" ]; then
     parse_syntax
     parse_tests
+  else
+    echo "No Test-cases found"
   fi
 }
 
