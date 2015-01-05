@@ -3,9 +3,13 @@
 # init: Init a new working directory for RoleSpec
 # Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
 
+realpath() {
+    python -c "import os; print(os.path.realpath('$1'))"
+}
+
 
 init() {
-	local path=$(realpath -ms "${1}")
+	local path=$(realpath "${1}")
 
 	if [[ -d ${path} ]]; then
 		error "Path already exists: ${path}"
