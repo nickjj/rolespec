@@ -15,7 +15,7 @@ init() {
 	mkdir -p "${path}/roles"
 
 	[ ! -e "${path}/.rolespec.cfg" ] && cat > "${path}/.rolespec.cfg" <<EOF
-# You custom configuration sould only apply when not running in travis
+# You custom configuration should only apply when not running in travis
 if [[ -z "\${ROLESPEC_TRAVIS}" ]]; then
     # Put your configuration here
     # Example:
