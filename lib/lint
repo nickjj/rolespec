@@ -22,16 +22,38 @@ verify_lint_path() {
     fi
   fi
 
-  if [[ "$(ls "${ROLESPEC_LINT}")" ]]; then
+  local tests="$(list_tests)"
+  if [ -n "$tests" ]; then
     parse_syntax
     parse_tests
+  else
+    echo "No Test-cases found"
   fi
 }
 
-parse_syntax() {
-  ls "${ROLESPEC_LINT}" | while read test; do
-    local test_path="${ROLESPEC_LINT}/${test}/test"
+list_tests() {
+    local test
+    local found=
+    # search for tests in sub-directories
+    find "${ROLESPEC_LINT}" -mindepth 1 -maxdepth 1 -type d | \
+    while read test; do
+	if [ -f "${test}/test" ] ; then
+	    found=1
+	    echo "${test}"
+	fi
+    done
+    # If no tests in sub-directories are found, look in "$ROLESPEC_LINT"
+    if [ -z "$found" ] ; then
+	test="${ROLESPEC_LINT}"
+	if [ -f "${test}/test" ] ; then
+	    echo "${test}"
+	fi
+    fi
+}
 
+parse_syntax() {
+  list_tests | while read test; do
+    local test_path="${test}/test"
     # Perform a syntax check
     if [[ -f "${test_path}" ]]; then
       bash -n "${test_path}"
@@ -40,9 +62,9 @@ parse_syntax() {
 }
 
 parse_tests() {
-  ls "${ROLESPEC_LINT}" | while read test; do
-    local hosts_path="${ROLESPEC_LINT}/${test}/${ROLESPEC_HOSTS}"
-    local test_path="${ROLESPEC_LINT}/${test}/test"
+  list_tests | while read test; do
+    local hosts_path="${test}/${ROLESPEC_HOSTS}"
+    local test_path="${test}/test"
 
     validate_path "${hosts_path}"
     parse_hosts "${hosts_path}"
@@ -50,7 +72,7 @@ parse_tests() {
     validate_path "${test_path}"
     parse_test "${test_path}"
 
-    check_yaml_dashes "${ROLESPEC_LINT}/${test}"
+    check_yaml_dashes "${test}"
   done
 }
 
