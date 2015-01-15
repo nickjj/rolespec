@@ -81,7 +81,13 @@ run_common_tasks() {
       local last_update_epoch="$(date "+%s" -d "$(stat -c %y /var/lib/apt/periodic/update-stamp)")"
       local time_difference=$((now_epoch - last_update_epoch))
     else
-      local time_difference=999999
+      local now_epoch="$(date "+%s")"
+      local last_update_epoch=$(stat -c %Y /var/lib/apt/lists/* | sort -nr | head -1)
+      if [ -n "$last_update_epoch" ] ; then
+	  local time_difference=$((now_epoch - last_update_epoch))
+      else
+	  local time_difference=999999
+      fi
     fi
 
     if [[ ${time_difference} -gt 86400 ]]; then
