@@ -66,7 +66,7 @@ assert_playbook_idempotent() {
   if [[ -z "${ROLESPEC_TURBO_MODE}" ]]; then
     ansible_run "Re-run playbook"
     assert_in "$(ansible-playbook "${ROLESPEC_PLAYBOOK}" "${@}" --connection=local)" \
-               "changed=0.*failed=0"
+               "changed=0.*unreachable=0.*failed=0"
   fi
 }
 
