@@ -441,6 +441,9 @@ Available variables
     - A list of packages to purge before installing PostgreSQL
 - ``ROLESPEC_MYSQL_LIBS``
     - A list of packages to purge before installing MySQL
+- ``ROLESPEC_NO_REINSTALL``
+    - Do not reinstall existing software. Currently this only
+      effects ansible.
 
 Test code style
 ~~~~~~~~~~~~~~~

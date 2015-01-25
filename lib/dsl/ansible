@@ -13,14 +13,18 @@ install_ansible() {
 
     sudo apt-get install -yq python-yaml python-jinja2 python-nose \
                              python-passlib python-crypto
-
-    # Avoid a clone error from the directory already existing
-    if [ -d "${ROLESPEC_ANSIBLE_INSTALL}" ]; then
-      rm -rf "${ROLESPEC_ANSIBLE_INSTALL}"
+    # Avoid a clone error from the directory already exists
+    if [ -n "${ROLESPEC_NO_REINSTALL}" -a ! -d "${ROLESPEC_ANSIBLE_INSTALL}" ] ; then
+	ROLESPEC_NO_REINSTALL=
+    fi
+    if [ -z "${ROLESPEC_NO_REINSTALL}" ] ; then
+	rm -rf "${ROLESPEC_ANSIBLE_INSTALL}"
     fi
 
-    git clone --depth 1 --recursive --branch "${branch}" \
+    if [ -z "${ROLESPEC_NO_REINSTALL}" ] ; then
+	git clone --depth 1 --recursive --branch "${branch}" \
               "${ROLESPEC_ANSIBLE_SOURCE}" "${ROLESPEC_ANSIBLE_INSTALL}"
+    fi
   fi
 
   # Fix the paths for the Ansible binaries
