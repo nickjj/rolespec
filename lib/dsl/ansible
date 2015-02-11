@@ -8,6 +8,7 @@ install_ansible() {
   # Install Ansible
   if [[ -z "${ROLESPEC_TURBO_MODE}" ]]; then
     local branch="${1:-devel}"
+    local sha1="${2}"
 
     rolespec_run "Install Ansible - ${branch}"
 
@@ -19,8 +20,17 @@ install_ansible() {
       rm -rf "${ROLESPEC_ANSIBLE_INSTALL}"
     fi
 
-    git clone --depth 1 --recursive --branch "${branch}" \
+    if [ -z "${sha1}" ] ; then
+      git clone --depth 1 --recursive --branch "${branch}" \
               "${ROLESPEC_ANSIBLE_SOURCE}" "${ROLESPEC_ANSIBLE_INSTALL}"
+    elif [ -n "${sha1}" ] ; then
+      git clone --recursive --branch "${branch}" \
+              "${ROLESPEC_ANSIBLE_SOURCE}" "${ROLESPEC_ANSIBLE_INSTALL}"
+      cd "${ROLESPEC_ANSIBLE_INSTALL}"
+      git checkout -f ${sha1}
+      git submodule update --init
+      cd - > /dev/null
+    fi
   fi
 
   # Fix the paths for the Ansible binaries
