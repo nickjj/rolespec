@@ -29,6 +29,7 @@ install_ansible() {
       cd "${ROLESPEC_ANSIBLE_INSTALL}"
       git checkout -f ${sha1}
       git submodule update --init
+      cd - > /dev/null
     fi
   fi
 
