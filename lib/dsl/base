@@ -105,3 +105,15 @@ assert_url() {
   assert_in "$(curl -k -s -o /dev/null -w '%{http_code}' ${1})" \
              "${response_code}" "${3}"
 }
+
+assert_tcp() {
+  local host=${1}
+  local port=${2}
+  local want_rc=${3:-0}
+
+  nc -z ${host} ${port}
+  rc=$?
+
+  assert_in "${rc}" "${want_rc}"
+}
+
