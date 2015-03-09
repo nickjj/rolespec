@@ -135,7 +135,7 @@ you can also pass regular rolespec arguments, e.g.:
 
 ::
 
-  vagrant ss -c specs -t
+  vagrant ssh -c specs -t
 
 ::
 
