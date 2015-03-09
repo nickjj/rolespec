@@ -190,7 +190,7 @@ To give it a try, issue:
 
   gem install guard
   gem install guard-shell
-  
+
 ::
 
 Then, in the role's top directory, create a ``Guardfile`` like so;
@@ -198,12 +198,12 @@ Then, in the role's top directory, create a ``Guardfile`` like so;
 ::
 
   guard :shell do
-    watch(/(defaults|tasks)\/.*/) do |m|
+    watch(/.*\/.*/) do |m|
       system('vagrant ssh -c "specs -p"')
     end
   end
 
 ::
 
-Then start Guard with ``guard``. ow, whenever you change a file in ``defaults``
-or ``tasks``; Guard will run the tests for you and report back.
+Then start Guard with ``guard``. Now, whenever you change a file in a
+subdirectory, Guard will run the tests for you and report back.
