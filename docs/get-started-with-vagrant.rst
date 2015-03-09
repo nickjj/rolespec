@@ -29,7 +29,7 @@ Quick start
       :args => "--install <your_role> <specs_repos>"
   end
   EOF
-  curl https://raw.githubusercontent.com/leucos/rolespec/develop/docs/vagrant_specs.sh > vagrant_specs.sh
+  curl https://raw.githubusercontent.com/leucos/rolespec/develop/docs/vagrant_specs.sh > vagrant_specs.sh 2>/dev/null
   vagrant up
   vagrant ssh -c specs
 
