@@ -3,13 +3,13 @@ Getting started with Vagrant
 
 - `Quick start`_
 - `Creating a Vagrant file`_
-- `Adding the provisionning script`_
+- `Adding the provisioning script`_
 - `Firing up the vagrant box`_
 - `Running tests`_
-- `Example`_
+- `Automating test runs with Guard`_
 
 While TravisCI is pretty cool to check that your roles are fine, you might want
-to have a way to test your roles while developping them. This will let you write
+to have a way to test your roles while developing them. This will let you write
 your roles in a real TDD fashion. This short guide will help you to set this
 up.
 
@@ -37,8 +37,8 @@ Creating a Vagrant file
 -----------------------
 
 The required Vagrant file is very basic. It must be in the root directory for
-your role. For instance, if you have a ``htop`` role in ``/home/ansible/ansible-
-htop``, the Vagrant file path must be ``/home/ansible/ansible-htop/Vagrantfile``.
+your role. For instance, if you have a ``htop`` role in ``/home/ansible/ansible-htop``,
+the Vagrant file path must be ``/home/ansible/ansible-htop/Vagrantfile``.
 You might want to adapt it to your needs, but it can boil down to this very 
 simple configuration:
 
@@ -69,8 +69,8 @@ This file will:
 - copy a shell script to ``/home/vagrant/specs`` and execute it with the 
   arguments provided
 
-Adding the provisionning script
--------------------------------
+Adding the provisioning script
+------------------------------
 
 As with the Vagrant file, the provisioning script must sit in your roles's top
 directory.
@@ -79,9 +79,9 @@ directory.
 
   #!/bin/bash
   #
-  # Vagrant provisionning script
+  # Vagrant provisioning script
   #
-  # Usage for provisionning VM & running (in Vagrant file):
+  # Usage for provisioning VM & running (in Vagrant file):
   # 
   # script.sh --install <role> <URL for test suite>
   #
@@ -123,8 +123,7 @@ When the script is called with ``--install``, it will do the following:
 Executing the tests
 ~~~~~~~~~~~~~~~~~~~
 
-When the script is called without any argument, it will launch the tests. To
-call the script from the host, you just have to issue:
+When the script is called without any argument, it will launch the tests. Call the script from your host like so:
 
 ::
 
@@ -132,15 +131,21 @@ call the script from the host, you just have to issue:
 
 ::
 
-you can also pass regular rolespec arguments, e.g.:
+You can also pass regular rolespec arguments, for example turbo mode:
 
 ::
 
-  vagrant ssh -c specs -t
+  vagrant ssh -c "specs -t"
 
 ::
 
-for turbo mode.
+Or may be playbook mode:
+
+::
+
+  vagrant ssh -c "specs -p"
+
+::
 
 Firing up the vagrant box
 -------------------------
@@ -153,13 +158,13 @@ Now that the required files are there, you just have to start your Vagrant box:
 
 ::
 
-The box will be started and provisionned with the provided script.
+The box will be started and provisioned with the provided script.
 
 
 Running tests
 -------------
 
-When the box is up and fully provisionned, running tests is as simple as:
+When the box is up and fully provisioned, running tests is as simple as:
 
 ::
 
@@ -167,19 +172,38 @@ When the box is up and fully provisionned, running tests is as simple as:
 
 ::
 
-Since you role is "mounted" in the Vagrant box, you can just issue this command
+Since your role is "mounted" in the Vagrant box, you can just issue this command
 whenever your role has changed.
 
-Using Guard (hint: ``gem install guard-shell``), you can even run Guard to
-continuously trigger tests when the role changes. Here is a sample Guardfile for
-this that monitors ``defaults`` and ``tasks`` directories:
+Automating test runs with Guard
+-------------------------------
+
+If you want to automate tests runs when you change your role locally, you can
+use `Guard <https://github.com/guard/guard/>`_ and 
+`guard-shell <https://github.com/guard/guard-shell/>`_.
+
+Guard will execute a command of your choice when some specific files changes.
+
+To give it a try, issue:
+
+::
+
+  gem install guard
+  gem install guard-shell
+  
+::
+
+Then, in the role's top directory, create a ``Guardfile`` like so;
 
 ::
 
   guard :shell do
     watch(/(defaults|tasks)\/.*/) do |m|
-      system('vagrant ssh -c specs -t')
+      system('vagrant ssh -c "specs -p"')
     end
   end
 
 ::
+
+Then start Guard with ``guard``. ow, whenever you change a file in ``defaults``
+or ``tasks``; Guard will run the tests for you and report back.
