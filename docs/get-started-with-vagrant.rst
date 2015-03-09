@@ -10,7 +10,7 @@ Getting started with Vagrant
 
 While TravisCI is pretty cool to check that your roles are fine, you might want
 to have a way to test your roles while developping them. This will let you write
-your roles in a real TDD fashion. This short guide will help you setting this
+your roles in a real TDD fashion. This short guide will help you to set this
 up.
 
 Quick start
@@ -38,9 +38,9 @@ Creating a Vagrant file
 
 The required Vagrant file is very basic. It must be in the root directory for
 your role. For instance, if you have a ``htop`` role in ``/home/ansible/ansible-
-htop``, the Vagrant file path must be ``/home/ansible/ansible-
-htop/Vagrantfile``. You might want to adapt it to your needs, but it can boil
-down to this very simple configuration:
+htop``, the Vagrant file path must be ``/home/ansible/ansible-htop/Vagrantfile``.
+You might want to adapt it to your needs, but it can boil down to this very 
+simple configuration:
 
 ::
 
@@ -59,14 +59,15 @@ down to this very simple configuration:
 ::
 
 You have to change the arguments in the args line:
+
 - ``role_name``: set your current role name 
 - ``specs_repos``: your tests repository URL
 
 This file will:
 
 - download and boot a ubuntu/trusty64 vagrant image
-- copy a shell script to "/home/vagrant/specs" and execute it with the arguments
-  provided
+- copy a shell script to ``/home/vagrant/specs`` and execute it with the 
+  arguments provided
 
 Adding the provisionning script
 -------------------------------
@@ -108,8 +109,8 @@ directory.
 
 This script serves two purposes:
 
-Setting up the box for the test
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Provisionning the box for the tests
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When the script is called with ``--install``, it will do the following:
 
@@ -127,7 +128,7 @@ call the script from the host, you just have to issue:
 
 ::
 
-  vagrant ss -c specs
+  vagrant ssh -c specs
 
 ::
 
@@ -166,17 +167,19 @@ When the box is up and fully provisionned, running tests is as simple as:
 
 ::
 
-Since you role is "mounted" in the Vgrant box, you can just issue this command
+Since you role is "mounted" in the Vagrant box, you can just issue this command
 whenever your role has changed.
 
-You can even run Guard to continuously trigger tests when the role changes. Here is a sample Guardfile:
+Using Guard (hint: ``gem install guard-shell``), you can even run Guard to
+continuously trigger tests when the role changes. Here is a sample Guardfile for
+this that monitors ``defaults`` and ``tasks`` directories:
 
 ::
 
-  guard :specs, cmd: 'vagrant ssh -c specs' do
-    watch(%r{^defaults/.*$})
-    watch(%r{^tasks/.*$})
-    watch(%r{^templates/.*$})
+  guard :shell do
+    watch(/(defaults|tasks)\/.*/) do |m|
+      system('vagrant ssh -c specs -t')
+    end
   end
 
 ::
