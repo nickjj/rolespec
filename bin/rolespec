@@ -3,8 +3,17 @@
 # rolespec: A shell based test library for Ansible
 # Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
 
-
 set -e
+
+detect_library_path() {
+  echo "############################"
+  # Set the lib path based on how RoleSpec is being ran
+  if [[ -n "${ROLESPEC_TRAVIS}" || "${ROLESPEC_TEST_SELF}" ]]; then
+    ROLESPEC_LIB="lib"
+  else
+    ROLESPEC_LIB="/usr/local/lib/rolespec"
+  fi
+}
 
 # Travis detection
 if [[ -n "${TRAVIS_REPO_SLUG}" ]]; then
@@ -13,11 +22,9 @@ if [[ -n "${TRAVIS_REPO_SLUG}" ]]; then
   ROLESPEC_TRAVIS_ROLES_PATH=":$(dirname "${TRAVIS_BUILD_DIR}")"
 fi
 
-# Set the lib path based on how RoleSpec is being ran
-if [[ -n "${ROLESPEC_TRAVIS}" || "${ROLESPEC_TEST_SELF}" ]]; then
-  ROLESPEC_LIB="lib"
-else
-  ROLESPEC_LIB="/usr/local/lib/rolespec"
+echo "################# ${ROLESPEC_LIB}"
+if [[ -z "${ROLESPEC_LIB}" ]]; then
+  detect_library_path
 fi
 
 . "${ROLESPEC_LIB}/ui"
