@@ -3,124 +3,28 @@
 # test-cli: A test harness for RoleSpec
 # Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
 
+# Select proper test suite according to distro Falling back to detecting yum
+# because base centos doesn't have lsb_release installed...
+if [[ -r /usr/bin/yum ]]; then
+  DISTRIBUTION=centos
+elif [[ -r /usr/sbin/pacman ]]; then
+  DISTRIBUTION=arch
+else
+  DISTRIBUTION=debian
+fi
 
-ROLESPEC_TEST_SELF_RUNTIME="/tmp/rolespec/test_self"
-ROLESPEC_TEST_SELF_ROLE="testrole"
-ROLESPEC_TEST_SELF_MONIT="$(sudo dpkg -s monit ; echo "$?")"
-ROLESPEC_TEST_SELF_SERVER=""
+if [[ ! -r tests/test-helper-$DISTRIBUTION ]]; then
+  echo "No tests suite for this distribution."
+  echo "Please consider creating tests/test-helper-DISTRIBUTIONNAME"
+  exit 1
+fi
+  
+. tests/test-helper-${DISTRIBUTION}
+. tests/test-suite
 
-setup_test() {
-  if [[ -d "${ROLESPEC_TEST_SELF_RUNTIME}" ]]; then
-    rm -rf "${ROLESPEC_TEST_SELF_RUNTIME}"
-  fi
-
-  # Add a rule so the assert_iptables_allow has a chance to succeed
-  # whatever the current iptable rules are
-  sudo /sbin/iptables -I OUTPUT -m tcp -p tcp -m comment --comment "ROLESPEC TEMP RULE" -j ACCEPT
-
-  mkdir -p "${ROLESPEC_TEST_SELF_RUNTIME}/roles"
-  mkdir -p "${ROLESPEC_TEST_SELF_RUNTIME}/tests"
-
-  # Avoid mangling monit if it exists already in the test environment
-  if [[ "${ROLESPEC_TEST_SELF_MONIT}" -eq 1 ]]; then
-    sudo apt-get -yq install monit
-
-    sudo tee "/etc/monit/monitrc" > /dev/null <<EOF
-set daemon 10
-  with start delay 0
-
-set httpd port 2812
-  use address localhost
-  allow localhost
-
-check process cron with pidfile /var/run/crond.pid
-  start program = "/etc/init.d/cron start" with timeout 60 seconds
-  stop program = "/etc/init.d/cron stop"
-EOF
-
-    sudo service monit reload
-  fi
-
-  # Start a simple server for the url assertion tests.
-  python -m SimpleHTTPServer > /dev/null 2>&1 &
-  ROLESPEC_TEST_SELF_SERVER="${!}"
-
-  create_test_role
-  create_test_script
-}
-
-create_test_role() {
-  local role_path="${ROLESPEC_TEST_SELF_RUNTIME}/roles/testuser.${ROLESPEC_TEST_SELF_ROLE}"
-
-  mkdir -p "${role_path}/tasks"
-  echo  "---" > "$role_path/tasks/main.yml"
-}
-
-create_test_script() {
-  local test_path="${ROLESPEC_TEST_SELF_RUNTIME}/tests/prefix-${ROLESPEC_TEST_SELF_ROLE}"
-
-  mkdir -p "${test_path}/inventory"
-  echo "placeholder_fqdn" > "${test_path}/inventory/hosts"
-
-  local test="$(cat <<EOF
-#!/bin/bash
-
-# Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
-
-. "\${ROLESPEC_LIB}/main"
-
-# ---- System actions ----
-
-install ed
-purge ed
-stop cron
-start cron
-
-
-# ---- Ansible actions and assertions ----
-
-install_ansible
-
-assert_playbook_runs
-assert_playbook_idempotent
-
-
-# ---- Basic assertions ----
-
-assert_in "\$(ls /)" "etc"
-assert_in "\$(ls /)" "galvonichorseshoecrabeyelash" !
-assert_in_file "/etc/debian_version" "."
-assert_in_file "/etc/debian_version" "steakhelicopterpants" !
-assert_path "/etc/debian_version"
-assert_path "/the/most/impossible/path/to/ever/not/exist" !
-assert_permission "/etc/debian_version" 644
-assert_permission "/etc/debian_version" 010 !
-assert_group "root"
-assert_user_in_group "\$(whoami)" "\$(whoami)"
-assert_user_in_group "nowayauserwilleverexit" "inthisgroupthatdoesnotexist" !
-assert_monitoring "cron"
-assert_monitoring "lemonadepupildestruction" !
-assert_iptables_allow "tcp"
-assert_iptables_allow "whowouldevernameaservicethisactualphraseandforwardit" !
-assert_url "http://localhost:8000"
-assert_url "http://localhost:8000" 500 !
-EOF
-  )"
-
-  echo "${test}" > "${test_path}/test"
-  chmod +x "${test_path}/test"
-}
-
-teardown_test() {
-  if [[ "${ROLESPEC_TEST_SELF_MONIT}" -eq 1 ]]; then
-    sudo apt-get -yq --purge remove monit 2> /dev/null
-  fi
-
-  sudo /sbin/iptables -D OUTPUT -m tcp -p tcp -m comment --comment "ROLESPEC TEMP RULE" -j ACCEPT
-
-  kill -9 "${ROLESPEC_TEST_SELF_SERVER}"
-}
-
+# Execute tests
 setup_test
-ROLESPEC_TEST_SELF=true TRAVIS_REPO_SLUG="" TRAVIS_BUILD_DIR="" bash -x bin/rolespec -r "${ROLESPEC_TEST_SELF_ROLE}"
+
+ROLESPEC_TEST_SELF=true TRAVIS_REPO_SLUG="" TRAVIS_BUILD_DIR="" bash bin/rolespec -r "${ROLESPEC_TEST_SELF_ROLE}"
+
 teardown_test

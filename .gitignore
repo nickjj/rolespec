@@ -93,3 +93,10 @@ com_crashlytics_export_strings.xml
 *.tmproj
 *.tmproject
 tmtags
+
+# Vagrant #
+.vagrant
+
+# Generated ansible.cfg
+ansible.cfg
+

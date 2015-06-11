@@ -1,0 +1,4 @@
+ROLESPEC_POSTGRESQL_LIBS="postgresql postgresql-contrib postgresql-devel postgresql-libs"
+ROLESPEC_MYSQL_LIBS="mysql mysql-libs mysql-devel"
+
+ROLESPEC_INSTALLER_COMMAND='yum -y install '

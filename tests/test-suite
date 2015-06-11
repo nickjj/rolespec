@@ -1,0 +1,62 @@
+
+create_test_role() {
+  local role_path="${ROLESPEC_TEST_SELF_RUNTIME}/roles/testuser.${ROLESPEC_TEST_SELF_ROLE}"
+
+  mkdir -p "${role_path}/tasks"
+  echo  "---" > "$role_path/tasks/main.yml"
+}
+
+create_test_script() {
+  local test_path="${ROLESPEC_TEST_SELF_RUNTIME}/tests/prefix-${ROLESPEC_TEST_SELF_ROLE}"
+
+  mkdir -p "${test_path}/inventory"
+  echo "placeholder_fqdn" > "${test_path}/inventory/hosts"
+
+  local test="$(cat <<EOF
+#!/bin/bash
+
+# Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
+
+. "\${ROLESPEC_LIB}/main"
+
+# ---- System actions ----
+
+install ed
+purge ed
+stop cron
+start cron
+
+
+# ---- Ansible actions and assertions ----
+
+install_ansible
+
+assert_playbook_runs
+assert_playbook_idempotent
+
+
+# ---- Basic assertions ----
+
+assert_in "\$(ls /)" "etc"
+assert_in "\$(ls /)" "galvonichorseshoecrabeyelash" !
+assert_in_file "/etc/hosts" "."
+assert_in_file "/etc/hosts" "steakhelicopterpants" !
+assert_path "/etc/hosts"
+assert_path "/the/most/impossible/path/to/ever/not/exist" !
+assert_permission "/etc/hosts" 644
+assert_permission "/etc/hosts" 010 !
+assert_group "root"
+assert_user_in_group "\$(whoami)" "\$(whoami)"
+assert_user_in_group "nowayauserwilleverexit" "inthisgroupthatdoesnotexist" !
+[[ -r /usr/sbin/monit ]] && assert_monitoring "cron"
+[[ -r /usr/sbin/monit ]] && assert_monitoring "lemonadepupildestruction" !
+assert_iptables_allow "tcp"
+assert_iptables_allow "whowouldevernameaservicethisactualphraseandforwardit" !
+assert_url "http://localhost:8000"
+assert_url "http://localhost:8000" 500 !
+EOF
+  )"
+
+  echo "${test}" > "${test_path}/test"
+  chmod +x "${test_path}/test"
+}

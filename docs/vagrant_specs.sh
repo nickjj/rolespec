@@ -16,7 +16,11 @@
   if [ "x$1" == "x--install" ]; then
     cp ~vagrant/specs /usr/local/bin/specs
     chmod 755 /usr/local/bin/specs
-    sudo apt-get install -qqy git
+    if [[ -x '/usr/bin/apt-get' ]]; then
+      sudo apt-get install -qqy git
+    else
+      sudo yum install -q -y git
+    fi
     su vagrant -c 'git clone --depth 1 https://github.com/nickjj/rolespec'
     cd ~vagrant/rolespec && make install
     su vagrant -c 'rolespec -i ~/testdir'
