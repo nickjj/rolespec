@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# test-cli: A test harness for RoleSpec
+# Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
+
+
+ROLESPEC_TEST_SELF_RUNTIME="/tmp/rolespec/test_self"
+ROLESPEC_TEST_SELF_ROLE="testrole"
+ROLESPEC_TEST_SELF_MONIT="$(sudo dpkg -s monit ; echo "$?")"
+ROLESPEC_TEST_SELF_SERVER=""
+
+setup_test() {
+  if [[ -d "${ROLESPEC_TEST_SELF_RUNTIME}" ]]; then
+    rm -rf "${ROLESPEC_TEST_SELF_RUNTIME}"
+  fi
+
+  # Add a rule so the assert_iptables_allow has a chance to succeed
+  # whatever the current iptable rules are
+  sudo /sbin/iptables -I OUTPUT -m tcp -p tcp -m comment --comment "ROLESPEC TEMP RULE" -j ACCEPT
+
+  mkdir -p "${ROLESPEC_TEST_SELF_RUNTIME}/roles"
+  mkdir -p "${ROLESPEC_TEST_SELF_RUNTIME}/tests"
+
+  # Avoid mangling monit if it exists already in the test environment
+  if [[ "${ROLESPEC_TEST_SELF_MONIT}" -eq 1 ]]; then
+    sudo apt-get -yq install monit
+
+    sudo tee "/etc/monit/monitrc" > /dev/null <<EOF
+set daemon 10
+  with start delay 0
+
+set httpd port 2812
+  use address localhost
+  allow localhost
+
+check process cron with pidfile /var/run/crond.pid
+  start program = "/etc/init.d/cron start" with timeout 60 seconds
+  stop program = "/etc/init.d/cron stop"
+EOF
+
+    sudo service monit reload
+  fi
+
+  # Start a simple server for the url assertion tests.
+  python -m SimpleHTTPServer > /dev/null 2>&1 &
+  ROLESPEC_TEST_SELF_SERVER="${!}"
+
+  create_test_role
+  create_test_script
+}
+
+create_test_role() {
+  local role_path="${ROLESPEC_TEST_SELF_RUNTIME}/roles/testuser.${ROLESPEC_TEST_SELF_ROLE}"
+
+  mkdir -p "${role_path}/tasks"
+  echo  "---" > "$role_path/tasks/main.yml"
+}
+
+teardown_test() {
+  if [[ "${ROLESPEC_TEST_SELF_MONIT}" -eq 1 ]]; then
+    sudo apt-get -yq --purge remove monit 2> /dev/null
+  fi
+
+  sudo /sbin/iptables -D OUTPUT -m tcp -p tcp -m comment --comment "ROLESPEC TEMP RULE" -j ACCEPT
+
+  kill -9 "${ROLESPEC_TEST_SELF_SERVER}"
+}
+

@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# test-cli: A test harness for RoleSpec
+# Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
+
+
+ROLESPEC_TEST_SELF_RUNTIME="/tmp/rolespec/test_self"
+ROLESPEC_TEST_SELF_ROLE="testrole"
+ROLESPEC_TEST_SELF_MONIT=
+ROLESPEC_TEST_SELF_SERVER=""
+
+setup_test() {
+  if [[ -d "${ROLESPEC_TEST_SELF_RUNTIME}" ]]; then
+    rm -rf "${ROLESPEC_TEST_SELF_RUNTIME}"
+  fi
+
+  # Add a rule so the assert_iptables_allow has a chance to succeed
+  # whatever the current iptable rules are
+  sudo /sbin/iptables -I OUTPUT -m tcp -p tcp -m comment --comment "ROLESPEC TEMP RULE" -j ACCEPT
+
+  mkdir -p "${ROLESPEC_TEST_SELF_RUNTIME}/roles"
+  mkdir -p "${ROLESPEC_TEST_SELF_RUNTIME}/tests"
+
+  # Start a simple server for the url assertion tests.
+  python -m SimpleHTTPServer > /dev/null 2>&1 &
+  ROLESPEC_TEST_SELF_SERVER="${!}"
+
+  create_test_role
+  create_test_script
+}
+
+teardown_test() {
+  if [[ "${ROLESPEC_TEST_SELF_MONIT}" -eq 1 ]]; then
+    sudo apt-get -yq --purge remove monit 2> /dev/null
+  fi
+
+  sudo /sbin/iptables -D OUTPUT -m tcp -p tcp -m comment --comment "ROLESPEC TEMP RULE" -j ACCEPT
+
+  kill -9 "${ROLESPEC_TEST_SELF_SERVER}"
+}
+

@@ -3,12 +3,15 @@
 # system: System helpers RoleSpec's bash DSL
 # Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
 
-
 install() {
   if [[ -z "${ROLESPEC_TURBO_MODE}" ]]; then
-    rolespec_run "Install apt packages"
+    rolespec_run "Install packages"
     echo
-    sudo apt-get -yq install "${@}"
+    if [[ -e "/etc/redhat-release" ]]; then
+      sudo yum install "${@}" -q -y
+    else
+      sudo apt-get -yq install "${@}"
+    fi
   fi
 }
 
@@ -16,7 +19,11 @@ purge() {
   if [[ -z ${ROLESPEC_TURBO_MODE} ]]; then
     rolespec_run "Purge apt packages"
     echo
-    sudo apt-get -yq --purge remove "${@}" 2> /dev/null
+    if [[ -e "/etc/redhat-release" ]]; then
+      sudo yum remove "${@}" -y -q 2> /dev/null
+    else
+      sudo apt-get -yq --purge remove "${@}" 2> /dev/null
+    fi
   fi
 }
 

@@ -1,0 +1,4 @@
+ROLESPEC_POSTGRESQL_LIBS="postgresql libpq-dev libpq5 postgresql-client-common postgresql-common"
+ROLESPEC_MYSQL_LIBS="mysql-common mysql-server-5.5 mysql-server-core-5.5 mysql-client-5.5 mysql-client-core-5.5"
+
+ROLESPEC_INSTALLER_COMMAND='apt-get -yq install '
