@@ -25,10 +25,6 @@ clean:
 
 test:
 	@echo "Testing RoleSpec ..."
-	tests/test-cli
-
-test-verbose:
-	@echo "Testing RoleSpec (local)..."
 	bash -x tests/test-cli
 
 test-debian:
