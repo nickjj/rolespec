@@ -17,7 +17,7 @@ install_ansible() {
         python-crypto python-six
     else
       sudo apt-get install -yq python-yaml python-jinja2 python-nose \
-        python-passlib python-crypto
+        python-passlib python-crypto python-six
     fi
 
     # Avoid a clone error from the directory already existing
