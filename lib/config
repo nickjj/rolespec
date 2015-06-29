@@ -7,6 +7,16 @@
 
 # ---- Functions ----
 
+guess_distribution() {
+  if [[ -r /usr/bin/yum ]]; then
+  echo centos
+elif [[ -r /usr/sbin/pacman ]]; then
+  echo arch
+else
+  echo debian
+fi
+}
+
 find_up () {
   # Traverse backwards appending ../ to the path until we find a RoleSpec
   # working directory or hit the root of the file system
@@ -24,7 +34,8 @@ find_up () {
 # ---- Configuration ----
 
 # Information
-ROLESPEC_RELEASE_NAME="$(lsb_release -a 2>/dev/null | tail -n 1 | awk '{print $2}')"
+ROLESPEC_RELEASE_NAME="$(lsb_release -a 2>/dev/null | grep Codename | awk '{print $2}')"
+ROLESPEC_DISTRIBUTION_NAME=$(guess_distribution)
 ROLESPEC_FQDN="$(hostname -f)"
 
 # Load the VERSION file from the correct path
@@ -63,7 +74,6 @@ ROLESPEC_ANSIBLE_CONFIG="$(pwd)/ansible.cfg"
 ROLESPEC_ANSIBLE_ROLES="${ROLESPEC_ROLES}${ROLESPEC_TRAVIS_ROLES_PATH}"
 
 # Test DSL helpers
-ROLESPEC_POSTGRESQL_LIBS="postgresql libpq-dev libpq5 postgresql-client-common
-                          postgresql-common"
-ROLESPEC_MYSQL_LIBS="mysql-common mysql-server-5.5 mysql-server-core-5.5
-                     mysql-client-5.5 mysql-client-core-5.5"
+if [[ -r "${ROLESPEC_LIB}/config-${ROLESPEC_DISTRIBUTION_NAME}" ]]; then
+  . "${ROLESPEC_LIB}/config-${ROLESPEC_DISTRIBUTION_NAME}"
+fi
