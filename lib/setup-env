@@ -71,15 +71,26 @@ EOF
   fi
 }
 
+update_system() {
+  if [[ -r "/etc/redhat-release" ]]; then
+    sudo yum update -q -y
+  else
+    sudo apt-get -qq update
+  fi
+}
+
 run_common_tasks() {
   if [[ -z "${ROLESPEC_TURBO_MODE}" ]]; then
     local update_file="/var/lib/apt/periodic/update-stamp"
+    if [[ -r "/etc/redhat-release" ]]; then
+      update_file="/var/lib/yum/rpmdb-indexes/version"
+    fi
 
-    # Only run apt-get update when it is stale
+    # Only run system update when it is stale
     local now_epoch="$(date "+%s")"
     local last_update_epoch time_difference
     if [[ -f "${update_file}" ]]; then
-	last_update_epoch=$(stat -c %Y /var/lib/apt/periodic/update-stamp)
+	last_update_epoch=$(stat -c %Y ${update_file})
     else
 	last_update_epoch=$(stat -c %Y /var/lib/apt/lists/* | sort -nr | head -1)
     fi
@@ -90,8 +101,8 @@ run_common_tasks() {
     fi
 
     if [[ ${time_difference} -gt 86400 ]]; then
-      rolespec_run "Run apt-get update silently"
-      sudo apt-get -qq update
+      rolespec_run "Run system update silently"
+      update_system
     fi
 
     rolespec_run "Create SSH key/pair and add ourselves to the known hosts"

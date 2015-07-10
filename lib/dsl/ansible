@@ -12,8 +12,13 @@ install_ansible() {
 
     rolespec_run "Install Ansible - ${branch}"
 
-    sudo apt-get install -yq python-yaml python-jinja2 python-nose \
-                             python-passlib python-crypto
+    if [[ -r "/etc/redhat-release" ]]; then
+      sudo yum install -y -q PyYAML python-jinja2 python-nose \
+        python-crypto python-six
+    else
+      sudo apt-get install -yq python-yaml python-jinja2 python-nose \
+        python-passlib python-crypto python-six
+    fi
 
     # Avoid a clone error from the directory already existing
     if [ -d "${ROLESPEC_ANSIBLE_INSTALL}" ]; then

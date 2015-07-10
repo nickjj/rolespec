@@ -6,6 +6,7 @@ PREFIX="/usr/local"
 BIN_DIR="${PREFIX}/bin"
 LIB_DIR="${PREFIX}/lib/rolespec"
 
+default: test
 
 install:
 	@echo "Installing RoleSpec scripts in ${BIN_DIR} ..."
@@ -24,4 +25,14 @@ clean:
 
 test:
 	@echo "Testing RoleSpec ..."
-	tests/test-cli
+	bash -x tests/test-cli
+
+test-debian:
+	@echo "Testing RoleSpec (debian Jessie)..."
+	vagrant up debian
+	@echo "Tests done.Please run 'vagrant destroy debian -f'."
+
+test-centos:
+	@echo "Testing RoleSpec (CentOS)..."
+	vagrant up centos
+	@echo "Tests done.Please run 'vagrant destroy centos -f'."
