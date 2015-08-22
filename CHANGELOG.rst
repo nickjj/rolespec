@@ -1,6 +1,14 @@
 RoleSpec changelog
 ==================
 
+v0.3.3 / 2015-08-22
+~~~~~~~~~~~~~~~~~~~
+
+- Add separate assertion to run the Ansible playbook in "dry mode" before
+  executing the real playbook. This is done so that ``ansible-playbook --check
+  --diff`` mode can be tested for errors as well. The old version fo the
+  assertion is still available.
+
 v0.3.2 / 2014-09-19
 ~~~~~~~~~~~~~~~~~~~
 

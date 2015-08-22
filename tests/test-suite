@@ -31,7 +31,7 @@ start cron
 
 install_ansible
 
-assert_playbook_runs
+assert_playbook_check_runs
 assert_playbook_idempotent
 
 
