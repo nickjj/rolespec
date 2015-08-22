@@ -374,6 +374,8 @@ below.
     - Performs just a syntax check
 - ``assert_playbook_runs``
     - Performs a syntax check **and** runs the playbook once
+- ``assert_playbook_check_runs``
+    - Performs a syntax check **and** runs ansible in check mode **and** runs the playbook once
 - ``assert_playbook_idempotent``
     - Re-runs the playbook checking for 0 changes
 
