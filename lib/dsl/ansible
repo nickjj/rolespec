@@ -92,6 +92,15 @@ assert_playbook_idempotent() {
   fi
 }
 
+assert_playbook_idempotent_long() {
+  if [[ -z "${ROLESPEC_TURBO_MODE}" ]]; then
+    ansible_run "Re-run playbook"
+    tempfile="$(mktemp)"
+    ansible-playbook "${ROLESPEC_PLAYBOOK}" "${@}" --connection=local | tee --append ${tempfile}
+    assert_in_file "${tempfile}" "changed=0.*unreachable=0.*failed=0"
+  fi
+}
+
 assert_playbook_check_runs() {
   assert_ansible_syntax "${@}"
   assert_ansible_check_diff "${@}"
