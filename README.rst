@@ -150,6 +150,7 @@ The same test case using RoleSpec
 
   assert_playbook_runs
   assert_playbook_idempotent
+  assert_playbook_idempotent_long
 
   assert_permission "/srv/users/testapp" "751"
   assert_user_in_group "testuser" "audio"
@@ -378,6 +379,8 @@ below.
     - Performs a syntax check **and** runs ansible in check mode **and** runs the playbook once
 - ``assert_playbook_idempotent``
     - Re-runs the playbook checking for 0 changes
+- ``assert_playbook_idempotent_long``
+    - Re-runs the playbook checking for 0 changes with periodic output
 
 Basic assertions
 ````````````````
