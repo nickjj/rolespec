@@ -111,7 +111,7 @@ run_common_tasks() {
     fi
     ssh-keyscan "${ROLESPEC_FQDN}" >> ~/.ssh/known_hosts
 
-    rolespec_run "Create global git user"
+    rolespec_run "Set git user and email globally"
     git config --global user.email "test@user.com" && git config --global user.name "Hi"
     echo -e "test@user.com => Hi\n"
   fi
