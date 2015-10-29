@@ -5,28 +5,8 @@ RoleSpec
 
 A shell based test library for Ansible that works both locally and over Travis-CI.
 
-- `Typical Travis setup vs using RoleSpec`_
-- `Comparing real examples`_
-- `Installation`_
-- `Ways to organize your tests`_
-- `Write your first test case`_
-    - `Basic test scaffold`_
-    - `Investigate the hosts file`_
-    - `Create a playbook`_
-    - `Investigate the test`_
-    - `Lint it`_
-    - `Run it`_
-    - `Test modes`_
-    - `Wrapping things up`_
-- `Example test cases`_
-- `Test API`_
-    - `System actions`_
-    - `Ansible actions and assertions`_
-    - `Basic assertions`_
-    - `Available variables`_
-- `Test code style`_
-- `Do you want to contribute?`_
-- `Author`_
+.. contents::
+   :local:
 
 Typical Travis setup vs using RoleSpec
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
