@@ -24,11 +24,11 @@ if [[ -n "${TRAVIS_REPO_SLUG}" ]]; then
 fi
 
 # CircleCI detection
-if [[ -n "${CIRCLE}" ]]; then
+if [[ -n "${CIRCLECI}" ]]; then
   ROLESPEC_ROLE="${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
   ROLESPEC_CI=true
   ROLESPEC_CI_ROLES_PATH=":$(dirname "${HOME}/${CIRCLE_PROJECT_REPONAME}")"
-  ROLESPEC_CI_BUILD_DIR="$(dirname "${HOME}/${CIRCLE_PROJECT_REPONAME}")"
+  ROLESPEC_CI_BUILD_DIR="${HOME}/${CIRCLE_PROJECT_REPONAME}"
 fi
 
 echo "################# ${ROLESPEC_LIB}"
