@@ -5,8 +5,8 @@
 
 
 set_lint_path() {
-  if [[ -n "${ROLESPEC_TRAVIS}" ]]; then
-    ROLESPEC_LINT="${ROLESPEC_TRAVIS_TESTS}"
+  if [[ -n "${ROLESPEC_CI}" ]]; then
+    ROLESPEC_LINT="${ROLESPEC_CI_TESTS}"
   else
     ROLESPEC_LINT="${ROLESPEC_TESTS}"
   fi

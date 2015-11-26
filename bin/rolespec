@@ -8,7 +8,7 @@ set -e
 detect_library_path() {
   echo "############################"
   # Set the lib path based on how RoleSpec is being ran
-  if [[ -n "${ROLESPEC_TRAVIS}" || "${ROLESPEC_TEST_SELF}" ]]; then
+  if [[ -n "${ROLESPEC_CI}" || "${ROLESPEC_TEST_SELF}" ]]; then
     ROLESPEC_LIB="lib"
   else
     ROLESPEC_LIB="/usr/local/lib/rolespec"
@@ -18,8 +18,19 @@ detect_library_path() {
 # Travis detection
 if [[ -n "${TRAVIS_REPO_SLUG}" ]]; then
   ROLESPEC_ROLE="${TRAVIS_REPO_SLUG}"
-  ROLESPEC_TRAVIS=true
-  ROLESPEC_TRAVIS_ROLES_PATH=":$(dirname "${TRAVIS_BUILD_DIR}")"
+  ROLESPEC_CI=true
+  ROLESPEC_CI_ROLE="$(basename "${TRAVIS_REPO_SLUG}")"
+  ROLESPEC_CI_ROLES_PATH=":$(dirname "${TRAVIS_BUILD_DIR}")"
+  ROLESPEC_CI_BUILD_DIR="${TRAVIS_BUILD_DIR}"
+fi
+
+# CircleCI detection
+if [[ -n "${CIRCLECI}" ]]; then
+  ROLESPEC_ROLE="${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+  ROLESPEC_CI=true
+  ROLESPEC_CI_ROLE="${CIRCLE_PROJECT_REPONAME}"
+  ROLESPEC_CI_ROLES_PATH=":$(dirname "${HOME}/${CIRCLE_PROJECT_REPONAME}")"
+  ROLESPEC_CI_BUILD_DIR="${HOME}/${CIRCLE_PROJECT_REPONAME}"
 fi
 
 echo "################# ${ROLESPEC_LIB}"
@@ -33,8 +44,8 @@ fi
 . "${ROLESPEC_LIB}/setup-env"
 
 enforce_working_directories() {
-  if [[ -n "${ROLESPEC_TRAVIS}" ]]; then
-    # Ensure the roles paths exist when running on Travis
+  if [[ -n "${ROLESPEC_CI}" ]]; then
+    # Ensure the roles paths exist when running on a CI server
     if [[ ! -d "${ROLESPEC_ROLES}" ]]; then
       mkdir -p "${ROLESPEC_ROLES}"
     fi
@@ -42,18 +53,18 @@ enforce_working_directories() {
 }
 
 set_role_name() {
-  if [[ -n "${ROLESPEC_TRAVIS}" ]]; then
-    ROLESPEC_ROLE="$(basename "${TRAVIS_REPO_SLUG}")"
-  else
+  if [[ -n "${ROLESPEC_CI}" ]]; then
+    ROLESPEC_ROLE="${ROLESPEC_CI_ROLE}"
+  elif [[ -z "${ROLESPEC_CI}" ]]; then
     ROLESPEC_ROLE_NAME="${ROLESPEC_ROLE_SOURCE}"
     ROLESPEC_ROLE="$(ls "${ROLESPEC_ROLES}" | grep "${ROLESPEC_ROLE_NAME}$")"
   fi
 }
 
 set_dynamic_paths() {
-  if [[ -n "${ROLESPEC_TRAVIS}" ]]; then
-    ROLESPEC_TEST="${ROLESPEC_TRAVIS_TESTS}/${ROLESPEC_ROLE}"
-    ROLESPEC_META="${TRAVIS_BUILD_DIR}/${ROLESPEC_META}"
+  if [[ -n "${ROLESPEC_CI}" ]]; then
+    ROLESPEC_TEST="${ROLESPEC_CI_TESTS}/${ROLESPEC_ROLE}"
+    ROLESPEC_META="${ROLESPEC_CI_BUILD_DIR}/${ROLESPEC_META}"
   else
     ROLESPEC_TEST="${ROLESPEC_TESTS}/$(ls "${ROLESPEC_TESTS}" | \
                    grep "${ROLESPEC_ROLE_NAME}$")"
@@ -83,8 +94,8 @@ export ROLESPEC_VERSION
 export ROLESPEC_DISTRIBUTION_NAME
 export ROLESPEC_RELEASE_NAME
 export ROLESPEC_FQDN
-export ROLESPEC_TRAVIS
-export ROLESPEC_TRAVIS_ROLES_PATH
+export ROLESPEC_CI
+export ROLESPEC_CI_ROLES_PATH
 export ROLESPEC_TURBO_MODE
 export ROLESPEC_PLAYBOOK_MODE
 export ROLESPEC_ROLES
