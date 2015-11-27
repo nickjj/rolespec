@@ -80,11 +80,15 @@ update_system() {
   distro=$(find_linux_distribution)
 echo $distro
   case "$distro" in
-    "amazon linux ami"|"Red Hat Enterprise Linux Server"|"CentOS Linux")
+    *"amazon linux ami"*|*"RedHat Enterprise Linux Server"*|*"CentOS Linux"*)
       sudo yum update -q -y 
       ;;
-    'Debian GNU/Linux')
+    *"Debian GNU/Linux"*)
       sudo apt-get -qq update
+      ;;
+    *)
+      echo "unsupported distribution ($distro)"
+      exit 1
   esac
 }
 
@@ -92,11 +96,15 @@ run_common_tasks() {
   if [[ -z "${ROLESPEC_TURBO_MODE}" ]]; then
     distro=$(find_linux_distribution)
     case "$distro" in
-      'amazon linux ami'|'Red Hat Enterprise Linux Server'|'CentOS Linux')
+      *"amazon linux ami"*|*"RedHat Enterprise Linux Server"*|*"CentOS Linux"*)
         local update_file="/var/lib/yum/rpmdb-indexes/version"
         ;;
-      'Debian GNU/Linux')
-        local supdate_file="/var/lib/apt/periodic/update-stamp"
+      *"Debian GNU/Linux"*)
+        local update_file="/var/lib/apt/periodic/update-stamp"
+        ;;
+      *)
+        echo "unsupported distribution ($distro)"
+        exit 1
     esac
 
     # Only run system update when it is stale
