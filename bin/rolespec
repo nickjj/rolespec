@@ -15,23 +15,6 @@ detect_library_path() {
   fi
 }
 
-# Travis detection
-if [[ -n "${TRAVIS_REPO_SLUG}" ]]; then
-  ROLESPEC_ROLE="${TRAVIS_REPO_SLUG}"
-  ROLESPEC_TRAVIS=true
-  ROLESPEC_TRAVIS_ROLES_PATH=":$(dirname "${TRAVIS_BUILD_DIR}")"
-fi
-
-echo "################# ${ROLESPEC_LIB}"
-if [[ -z "${ROLESPEC_LIB}" ]]; then
-  detect_library_path
-fi
-
-. "${ROLESPEC_LIB}/ui"
-. "${ROLESPEC_LIB}/config"
-. "${ROLESPEC_LIB}/cli"
-. "${ROLESPEC_LIB}/setup-env"
-
 enforce_working_directories() {
   if [[ -n "${ROLESPEC_TRAVIS}" ]]; then
     # Ensure the roles paths exist when running on Travis
@@ -67,6 +50,23 @@ set_dynamic_paths() {
   ROLESPEC_PLAYBOOK="${ROLESPEC_TEST}/${ROLESPEC_PLAYBOOK}"
   ROLESPEC_SCRIPT="${ROLESPEC_TEST}/test"
 }
+
+# Travis detection
+if [[ -n "${TRAVIS_REPO_SLUG}" ]]; then
+  ROLESPEC_ROLE="${TRAVIS_REPO_SLUG}"
+  ROLESPEC_TRAVIS=true
+  ROLESPEC_TRAVIS_ROLES_PATH=":$(dirname "${TRAVIS_BUILD_DIR}")"
+fi
+
+echo "################# ${ROLESPEC_LIB}"
+if [[ -z "${ROLESPEC_LIB}" ]]; then
+  detect_library_path
+fi
+
+. "${ROLESPEC_LIB}/ui"
+. "${ROLESPEC_LIB}/config"
+. "${ROLESPEC_LIB}/cli"
+. "${ROLESPEC_LIB}/setup-env"
 
 # Perform pre-setup tasks to set variables
 enforce_working_directories
