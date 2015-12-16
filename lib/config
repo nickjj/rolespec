@@ -51,7 +51,7 @@ ROLESPEC_TEST_SELF="${ROLESPEC_TEST_SELF}"
 # Set the runtime path based on what env RoleSpec is being ran under
 if [[ -n "${ROLESPEC_TEST_SELF}" ]]; then
   ROLESPEC_RUNTIME="/tmp/rolespec/test_self"
-elif [[ -n "${ROLESPEC_TRAVIS}" ]]; then
+elif [[ -n "${ROLESPEC_CI}" ]]; then
   ROLESPEC_RUNTIME="$(pwd)"
 else
   ROLESPEC_RUNTIME="$(find_up)"
@@ -60,7 +60,7 @@ fi
 # Working paths
 ROLESPEC_ROLES="${ROLESPEC_RUNTIME}/roles"
 ROLESPEC_TESTS="${ROLESPEC_RUNTIME}/tests"
-ROLESPEC_TRAVIS_TESTS="${ROLESPEC_RUNTIME}/travis/tests"
+ROLESPEC_CI_TESTS="${ROLESPEC_RUNTIME}/ci/tests"
 
 # Test paths
 ROLESPEC_HOSTS="inventory/hosts"
@@ -71,7 +71,7 @@ ROLESPEC_PLAYBOOK="playbooks/test.yml"
 ROLESPEC_ANSIBLE_SOURCE="https://github.com/ansible/ansible"
 ROLESPEC_ANSIBLE_INSTALL="/tmp/ansible"
 ROLESPEC_ANSIBLE_CONFIG="$(pwd)/ansible.cfg"
-ROLESPEC_ANSIBLE_ROLES="${ROLESPEC_ROLES}${ROLESPEC_TRAVIS_ROLES_PATH}"
+ROLESPEC_ANSIBLE_ROLES="${ROLESPEC_ROLES}${ROLESPEC_CI_ROLES_PATH}"
 
 # Test DSL helpers
 if [[ -r "${ROLESPEC_LIB}/config-${ROLESPEC_DISTRIBUTION_NAME}" ]]; then

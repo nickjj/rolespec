@@ -50,7 +50,7 @@ install_ansible() {
   echo
 
   # Auto resolve dependencies
-  if [[ -f "${ROLESPEC_META}" && -n "${ROLESPEC_TRAVIS}" ]]; then
+  if [[ -f "${ROLESPEC_META}" && -n "${ROLESPEC_CI}" ]]; then
     # Space separated list of unique dependencies in Galaxy format
     local dependencies="$(grep "\- role: " "${ROLESPEC_META}" | sed -e "s/^[ \t]*//" \
                     | awk '{print $3}' | uniq | tr '\n' ' ')"
