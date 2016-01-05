@@ -399,6 +399,7 @@ them.
 - ``assert_iptables_allow <port or service name>``
 - ``assert_url <full url> [status code=200]``
 - ``assert_tcp <hostname> <port> [return code=0]``
+- ``assert_exit_code <command> <expected exit code>``
 
 Available variables
 ```````````````````

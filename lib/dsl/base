@@ -71,6 +71,26 @@ assert_in_file() {
   fi
 }
 
+assert_exit_code() {
+  local want_rc=${2:-0}
+
+  rc=0;
+  ${1} || rc=$?
+  if [[ "${3}" == "!" ]]; then
+    if [[ ${rc} != ${want_rc} ]]; then 
+      pass "Exit code ${rc} not ${want_rc}"
+    else
+      fail "Exit code is ${want_rc}"
+    fi
+  else
+    if [[ ${rc} != ${want_rc} ]]; then 
+      fail "Exit code ${rc} not ${want_rc}"
+    else
+      pass "Exit code is ${want_rc}"
+    fi
+  fi
+}
+
 assert_path() {
   assert_in "$(sudo stat "${1}")" "Size:" "${2}"
 }
@@ -113,9 +133,6 @@ assert_tcp() {
   local port=${2}
   local want_rc=${3:-0}
 
-  nc -z ${host} ${port}
-  rc=$?
-
-  assert_in "${rc}" "${want_rc}"
+  assert_exit_code "nc -z ${host} ${port}" "${want_rc}"
 }
 
