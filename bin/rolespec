@@ -46,7 +46,7 @@ set_role_name() {
     ROLESPEC_ROLE="$(basename "${TRAVIS_REPO_SLUG}")"
   else
     ROLESPEC_ROLE_NAME="${ROLESPEC_ROLE_SOURCE}"
-    ROLESPEC_ROLE="$(find "${ROLESPEC_ROLES}" -type d -printf '%P\n' | \
+    ROLESPEC_ROLE="$(find -L "${ROLESPEC_ROLES}" -type d -printf '%P\n' | \
                    grep "^${ROLESPEC_ROLE_NAME}$")"
   fi
 }
@@ -57,7 +57,7 @@ set_dynamic_paths() {
     ROLESPEC_META="${TRAVIS_BUILD_DIR}/${ROLESPEC_META}"
   else
     ROLESPEC_TEST="${ROLESPEC_TESTS}/$(\
-                   find "${ROLESPEC_TESTS}" -type d -printf '%P\n' | \
+                   find -L "${ROLESPEC_TESTS}" -type d -printf '%P\n' | \
                    grep "^${ROLESPEC_ROLE_NAME}$")"
     ROLESPEC_META="${ROLESPEC_TEST}/${ROLESPEC_META}"
   fi
