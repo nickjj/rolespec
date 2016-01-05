@@ -54,6 +54,10 @@ assert_iptables_allow "tcp"
 assert_iptables_allow "whowouldevernameaservicethisactualphraseandforwardit" !
 assert_url "http://localhost:8000"
 assert_url "http://localhost:8000" 500 !
+assert_exit_code "true"
+assert_exit_code "false" 0 !  
+assert_exit_code "true" 0 
+assert_exit_code "true" 1 ! 
 EOF
   )"
 
