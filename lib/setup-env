@@ -17,6 +17,12 @@ enforce_rolespec_directory() {
   fi
 }
 
+enforce_role_exists() {
+  if [[ -z "${ROLESPEC_ROLE}" ]]; then
+    error "Role not found:\n${ROLESPEC_ROLE_SOURCE} in ${ROLESPEC_ROLES}\n"
+  fi
+}
+
 enforce_test_exists() {
   if [ ! -f "${ROLESPEC_SCRIPT}" ]; then
     error "Test script not found:\n${ROLESPEC_SCRIPT}\n"
@@ -120,6 +126,7 @@ run_common_tasks() {
 presetup() {
   enforce_arguments
   enforce_rolespec_directory
+  enforce_role_exists
 
   if [[ -n "$ROLESPEC_TRAVIS" ]]; then
     clone_url
