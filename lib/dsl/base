@@ -7,7 +7,23 @@
 . "${ROLESPEC_LIB}/ui"
 
 pass() {
-  printf "\n%s: [%s | %s]\n%s: %s\n\n%s:\n%s\n\n" \
+  printf "\n%s: [%s | %s]\n\n" \
+    "$(notify "TEST" 1)" \
+    "${1}" \
+    "$(test_pass "PASS" 1)"
+}
+
+fail() {
+  printf "\n%s: [%s | %s]\n\n" \
+    "$(notify "TEST" 1)" \
+    "${1}" \
+    "$(test_fail "FAIL" 1)"
+
+  exit 1
+}
+
+pass_output() {
+  printf "\n%s: [%s | %s]\n%s:\n%s\n\n%s:\n%s\n\n" \
     "$(notify "TEST" 1)" \
     "${1}" \
     "$(test_pass "PASS" 1)" \
@@ -17,8 +33,8 @@ pass() {
     "${3}"
 }
 
-fail() {
-  printf "\n%s: [%s | %s]\n%s: %s\n\n%s:\n%s\n\n" \
+fail_output() {
+  printf "\n%s: [%s | %s]\n%s:\n%s\n\n%s:\n%s\n\n" \
     "$(notify "TEST" 1)" \
     "${1}" \
     "$(test_fail "FAIL" 1)" \
@@ -37,15 +53,15 @@ assert_in() {
 
   if [[ "${3}" == "!" ]]; then
     if [[ ! $1 =~ $2 ]]; then
-      pass "Not in output" "${2}" "${line}"
+      pass_output "Not in output" "${2}" "${line}"
     else
-      fail "Not in output" "${2}" "${1}"
+      fail_output "Not in output" "${2}" "${1}"
     fi
   else
     if [[ ${1} =~ ${2} ]]; then
-      pass "In output" "${2}" "${line}"
+      pass_output "In output" "${2}" "${line}"
     else
-      fail "In output" "${2}" "${1}"
+      fail_output "In output" "${2}" "${1}"
     fi
   fi
 }
@@ -60,14 +76,14 @@ assert_in_file() {
 
   if [[ "${3}" == "!" ]]; then
     if sudo grep -E -q -e "${2}" "${1}"; then
-      fail "Not in file '${filename}'" "${2}" "${1}"
+      fail_output "Not in file '${filename}'" "${2}" "${1}"
     else
-      pass "Not in file '${filename}'" "${2}" "${line_match}"
+      pass_output "Not in file '${filename}'" "${2}" "${line_match}"
     fi
   else
     sudo grep -E -q -e "${2}" "${1}" \
-    && (pass "In file '${filename}'" "${2}" "${line_match}") \
-    || (fail "In file '${filename}'" "${2}" "${1}")
+    && (pass_output "In file '${filename}'" "${2}" "${line_match}") \
+    || (fail_output "In file '${filename}'" "${2}" "${1}")
   fi
 }
 
@@ -77,13 +93,13 @@ assert_exit_code() {
   rc=0;
   ${1} || rc=$?
   if [[ "${3}" == "!" ]]; then
-    if [[ ${rc} != ${want_rc} ]]; then 
+    if [[ ${rc} != ${want_rc} ]]; then
       pass "Exit code ${rc} not ${want_rc}"
     else
       fail "Exit code is ${want_rc}"
     fi
   else
-    if [[ ${rc} != ${want_rc} ]]; then 
+    if [[ ${rc} != ${want_rc} ]]; then
       fail "Exit code ${rc} not ${want_rc}"
     else
       pass "Exit code is ${want_rc}"
@@ -92,7 +108,19 @@ assert_exit_code() {
 }
 
 assert_path() {
-  assert_in "$(sudo stat "${1}")" "Size:" "${2}"
+  if [[ "${2}" == "!" ]]; then
+    if sudo test ! -e "${1}" ; then
+      pass "File '${1}' does not exists"
+    else
+      fail "File '${1}' does exists"
+    fi
+  else
+    if sudo test -e "${1}" ; then
+      pass "File '${1}' exists"
+    else
+      fail "File '${1}' does not exists"
+    fi
+  fi
 }
 
 assert_permission() {
