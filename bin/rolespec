@@ -6,13 +6,15 @@
 set -e
 
 detect_library_path() {
-  echo "############################"
-  # Set the lib path based on how RoleSpec is being ran
-  if [[ -n "${ROLESPEC_TRAVIS}" || "${ROLESPEC_TEST_SELF}" ]]; then
-    ROLESPEC_LIB="lib"
-  else
-    ROLESPEC_LIB="/usr/local/lib/rolespec"
+  if [[ -z "${ROLESPEC_LIB}" ]]; then
+    # Set the lib path based on how RoleSpec is being ran
+    if [[ -n "${ROLESPEC_TRAVIS}" || "${ROLESPEC_TEST_SELF}" ]]; then
+      ROLESPEC_LIB="lib"
+    else
+      ROLESPEC_LIB="/usr/local/lib/rolespec"
+    fi
   fi
+  echo "################# ROLESPEC_LIB=${ROLESPEC_LIB}"
 }
 
 enforce_working_directories() {
@@ -58,10 +60,7 @@ if [[ -n "${TRAVIS_REPO_SLUG}" ]]; then
   ROLESPEC_TRAVIS_ROLES_PATH=":$(dirname "${TRAVIS_BUILD_DIR}")"
 fi
 
-echo "################# ${ROLESPEC_LIB}"
-if [[ -z "${ROLESPEC_LIB}" ]]; then
-  detect_library_path
-fi
+detect_library_path
 
 . "${ROLESPEC_LIB}/ui"
 . "${ROLESPEC_LIB}/config"
