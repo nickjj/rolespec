@@ -1,14 +1,14 @@
 #!/bin/bash
 #
-# Vagrant provisionning script
+# Vagrant provisioning script
 #
-# Usage for provisionning VM & running (in Vagrant file):
-# 
+# Usage for provisioning VM & running (in Vagrant file):
+#
 # script.sh --install <role> <URL for test suite>
 #
-# e.g. : 
+# e.g. :
 # script.sh --install ansible-nginx https://github.com/erasme/erasme-roles-specs.git
-# 
+#
 # Usage for running only (from host):
 #
 # vagrant ssh -c ./specs
@@ -37,5 +37,3 @@
 # fi
 
 cd ~vagrant/testdir && rolespec -r $(ls roles) "$*"
-
-

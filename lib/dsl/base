@@ -59,15 +59,35 @@ assert_in_file() {
   fi
 
   if [[ "${3}" == "!" ]]; then
-    if sudo grep -E -q "${2}" "${1}"; then
+    if sudo grep -E -q -e "${2}" "${1}"; then
       fail "Not in file '${filename}'" "${2}" "${1}"
     else
       pass "Not in file '${filename}'" "${2}" "${line_match}"
     fi
   else
-    sudo grep -E -q "${2}" "${1}" \
+    sudo grep -E -q -e "${2}" "${1}" \
     && (pass "In file '${filename}'" "${2}" "${line_match}") \
     || (fail "In file '${filename}'" "${2}" "${1}")
+  fi
+}
+
+assert_exit_code() {
+  local want_rc=${2:-0}
+
+  rc=0;
+  ${1} || rc=$?
+  if [[ "${3}" == "!" ]]; then
+    if [[ ${rc} != ${want_rc} ]]; then 
+      pass "Exit code ${rc} not ${want_rc}"
+    else
+      fail "Exit code is ${want_rc}"
+    fi
+  else
+    if [[ ${rc} != ${want_rc} ]]; then 
+      fail "Exit code ${rc} not ${want_rc}"
+    else
+      pass "Exit code is ${want_rc}"
+    fi
   fi
 }
 
@@ -113,9 +133,6 @@ assert_tcp() {
   local port=${2}
   local want_rc=${3:-0}
 
-  nc -z ${host} ${port}
-  rc=$?
-
-  assert_in "${rc}" "${want_rc}"
+  assert_exit_code "nc -z ${host} ${port}" "${want_rc}"
 }
 

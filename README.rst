@@ -5,28 +5,8 @@ RoleSpec
 
 A shell based test library for Ansible that works both locally and over Travis-CI.
 
-- `Typical Travis setup vs using RoleSpec`_
-- `Comparing real examples`_
-- `Installation`_
-- `Ways to organize your tests`_
-- `Write your first test case`_
-    - `Basic test scaffold`_
-    - `Investigate the hosts file`_
-    - `Create a playbook`_
-    - `Investigate the test`_
-    - `Lint it`_
-    - `Run it`_
-    - `Test modes`_
-    - `Wrapping things up`_
-- `Example test cases`_
-- `Test API`_
-    - `System actions`_
-    - `Ansible actions and assertions`_
-    - `Basic assertions`_
-    - `Available variables`_
-- `Test code style`_
-- `Do you want to contribute?`_
-- `Author`_
+.. contents::
+   :local:
 
 Typical Travis setup vs using RoleSpec
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -60,7 +40,7 @@ The snippets below come from testing a Rails deployment role.
 The old typical Travis way
 ``````````````````````````
 
-::
+.. code:: YAML
 
   ---
 
@@ -138,7 +118,7 @@ The old typical Travis way
 The same test case using RoleSpec
 `````````````````````````````````
 
-::
+.. code:: Bash
 
   #!/bin/bash
 
@@ -171,7 +151,7 @@ If you're using it on Travis then you don't need to download anything.
 
 Use this ``.travis.yml`` as a guide, it would go in each of your role's repositories:
 
-::
+.. code:: YAML
 
   ---
 
@@ -197,10 +177,10 @@ Use this ``.travis.yml`` as a guide, it would go in each of your role's reposito
 
 You can also use RoleSpec locally, perhaps in a container or virtual machine.
 
-::
+.. code:: Bash
 
-  $ git clone https://github.com/nickjj/rolespec
-  $ cd rolespec ; sudo make install
+  git clone https://github.com/nickjj/rolespec
+  cd rolespec ; sudo make install
 
 Getting setup locally
 `````````````````````
@@ -238,7 +218,9 @@ installed RoleSpec.
 First off we'll want to **init a new working directory**. This is where all of
 your roles and tests will be stored. It can be located anywhere you want. Run this:
 
-``rolespec -i ~/foo``
+.. code:: Bash
+
+  rolespec -i ~/foo
 
 From this point on I'm going to assume you're in your working directory. All
 paths will be relative to that.
@@ -257,7 +239,9 @@ just an example.
 Let's create a role locally and make it do the least amount possible just so
 we can test it.
 
-``mkdir -p roles/someperson.foo/tasks && touch roles/someperson.foo/tasks/main.yml``
+.. code:: Bash
+
+  mkdir -p roles/someperson.foo/tasks && touch roles/someperson.foo/tasks/main.yml
 
 Basic test scaffold
 ```````````````````
@@ -308,7 +292,9 @@ Try running it now, you may see some feedback.
 Run it
 ``````
 
-``rolespec -r foo``
+.. code:: Bash
+
+  rolespec -r foo
 
 It should run successfully and you'll be greeted with passing tests at the end.
 Here's a cool tip too, if you run ``bash -x rolespec -r foo`` instead you will
@@ -325,14 +311,18 @@ Sometimes you just want to quickly iterate on a playbook and you don't care
 about resetting all of the system packages, etc.. You can run RoleSpec
 in **playbook mode** like so:
 
-``rolespec -r foo -p``.
+.. code:: Bash
+
+  rolespec -r foo -p
 
 Last up is **turbo mode** which skips everything except running your assertions.
 This allows you to work against a static state of the system. Perfect for when
 you want to write a bunch of assertions against a known setup. You can
 run that like so:
 
-``rolespec -r foo -t``.
+.. code:: Bash
+
+  rolespec -r foo -t
 
 Wrapping things up
 ``````````````````
@@ -399,6 +389,7 @@ them.
 - ``assert_iptables_allow <port or service name>``
 - ``assert_url <full url> [status code=200]``
 - ``assert_tcp <hostname> <port> [return code=0]``
+- ``assert_exit_code <command> <expected exit code>``
 
 Available variables
 ```````````````````

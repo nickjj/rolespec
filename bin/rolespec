@@ -57,7 +57,8 @@ set_role_name() {
     ROLESPEC_ROLE="${ROLESPEC_CI_ROLE}"
   elif [[ -z "${ROLESPEC_CI}" ]]; then
     ROLESPEC_ROLE_NAME="${ROLESPEC_ROLE_SOURCE}"
-    ROLESPEC_ROLE="$(ls "${ROLESPEC_ROLES}" | grep "${ROLESPEC_ROLE_NAME}$")"
+    ROLESPEC_ROLE="$(find -L "${ROLESPEC_ROLES}" -type d -printf '%P\n' | \
+                   grep "^${ROLESPEC_ROLE_NAME}$")"
   fi
 }
 
@@ -66,8 +67,9 @@ set_dynamic_paths() {
     ROLESPEC_TEST="${ROLESPEC_CI_TESTS}/${ROLESPEC_ROLE}"
     ROLESPEC_META="${ROLESPEC_CI_BUILD_DIR}/${ROLESPEC_META}"
   else
-    ROLESPEC_TEST="${ROLESPEC_TESTS}/$(ls "${ROLESPEC_TESTS}" | \
-                   grep "${ROLESPEC_ROLE_NAME}$")"
+    ROLESPEC_TEST="${ROLESPEC_TESTS}/$(\
+                   find -L "${ROLESPEC_TESTS}" -type d -printf '%P\n' | \
+                   grep "^${ROLESPEC_ROLE_NAME}$")"
     ROLESPEC_META="${ROLESPEC_TEST}/${ROLESPEC_META}"
   fi
 
