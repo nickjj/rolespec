@@ -80,14 +80,14 @@ assert_ansible_check_diff() {
 assert_ansible_run() {
   if [[ -z "${ROLESPEC_TURBO_MODE}" || -n "${ROLESPEC_PLAYBOOK_MODE}" ]]; then
     ansible_run "Run playbook"
-    ansible-playbook "${ROLESPEC_PLAYBOOK}" "${@}" --connection=local
+    travis_wait ansible-playbook "${ROLESPEC_PLAYBOOK}" "${@}" --connection=local
   fi
 }
 
 assert_playbook_idempotent() {
   if [[ -z "${ROLESPEC_TURBO_MODE}" ]]; then
     ansible_run "Re-run playbook"
-    assert_in "$(ansible-playbook "${ROLESPEC_PLAYBOOK}" "${@}" --connection=local)" \
+    assert_in "$(travis_wait ansible-playbook "${ROLESPEC_PLAYBOOK}" "${@}" --connection=local)" \
                "changed=0.*unreachable=0.*failed=0"
   fi
 }
