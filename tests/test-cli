@@ -25,6 +25,7 @@ fi
 # Execute tests
 setup_test
 
+set -e
 ROLESPEC_TEST_SELF=true TRAVIS_REPO_SLUG="" TRAVIS_BUILD_DIR="" bash bin/rolespec -r "${ROLESPEC_TEST_SELF_ROLE}"
 
 teardown_test
