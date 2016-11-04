@@ -52,7 +52,7 @@ inject_placeholders() {
 ---
 
 - hosts: '${ROLESPEC_FQDN}'
-  sudo: true
+  become: True
 
   roles:
     - role: '${ROLESPEC_ROLE}'
