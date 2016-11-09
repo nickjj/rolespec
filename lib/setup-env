@@ -71,20 +71,41 @@ EOF
   fi
 }
 
+find_linux_distribution() {
+  distro=`awk '/^NAME=/' /etc/*-release | sed 's/NAME=//' | tr '[:upper:]' '[:lower:]'`
+  echo $distro
+}
+
 update_system() {
-  if [[ -r "/etc/redhat-release" ]]; then
-    sudo yum update -q -y
-  else
-    sudo apt-get -qq update
-  fi
+  distro=$(find_linux_distribution)
+echo $distro
+  case "$distro" in
+    *"amazon linux ami"*|*"RedHat Enterprise Linux Server"*|*"CentOS Linux"*)
+      sudo yum update -q -y 
+      ;;
+    *"Debian GNU/Linux"*)
+      sudo apt-get -qq update
+      ;;
+    *)
+      echo "unsupported distribution ($distro)"
+      exit 1
+  esac
 }
 
 run_common_tasks() {
   if [[ -z "${ROLESPEC_TURBO_MODE}" ]]; then
-    local update_file="/var/lib/apt/periodic/update-stamp"
-    if [[ -r "/etc/redhat-release" ]]; then
-      update_file="/var/lib/yum/rpmdb-indexes/version"
-    fi
+    distro=$(find_linux_distribution)
+    case "$distro" in
+      *"amazon linux ami"*|*"RedHat Enterprise Linux Server"*|*"CentOS Linux"*)
+        local update_file="/var/lib/yum/rpmdb-indexes/version"
+        ;;
+      *"Debian GNU/Linux"*)
+        local update_file="/var/lib/apt/periodic/update-stamp"
+        ;;
+      *)
+        echo "unsupported distribution ($distro)"
+        exit 1
+    esac
 
     # Only run system update when it is stale
     local now_epoch="$(date "+%s")"
