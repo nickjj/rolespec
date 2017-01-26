@@ -50,7 +50,7 @@ install_ansible() {
   echo
 
   # Auto resolve dependencies
-  if [[ -f "${ROLESPEC_META}" && -n "${ROLESPEC_TRAVIS}" ]]; then
+  if [[ -f "${ROLESPEC_META}" && -n "${ROLESPEC_CI}" ]]; then
     # Space separated list of unique dependencies in Galaxy format
     local dependencies="$(grep "\- role: " "${ROLESPEC_META}" | sed -e "s/^[ \t]*//" \
                     | awk '{print $3}' | uniq | tr '\n' ' ')"
@@ -80,14 +80,14 @@ assert_ansible_check_diff() {
 assert_ansible_run() {
   if [[ -z "${ROLESPEC_TURBO_MODE}" || -n "${ROLESPEC_PLAYBOOK_MODE}" ]]; then
     ansible_run "Run playbook"
-    ansible-playbook "${ROLESPEC_PLAYBOOK}" "${@}" --connection=local
+    travis_wait ansible-playbook "${ROLESPEC_PLAYBOOK}" "${@}" --connection=local
   fi
 }
 
 assert_playbook_idempotent() {
   if [[ -z "${ROLESPEC_TURBO_MODE}" ]]; then
     ansible_run "Re-run playbook"
-    assert_in "$(ansible-playbook "${ROLESPEC_PLAYBOOK}" "${@}" --connection=local)" \
+    assert_in "$(travis_wait ansible-playbook "${ROLESPEC_PLAYBOOK}" "${@}" --connection=local)" \
                "changed=0.*unreachable=0.*failed=0"
   fi
 }
