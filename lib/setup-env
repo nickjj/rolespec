@@ -5,7 +5,7 @@
 
 
 enforce_arguments() {
-  if [[ -z "${ROLESPEC_TRAVIS}" && -z "${ROLESPEC_ROLE_SOURCE}" ]]; then
+  if [[ -z "${ROLESPEC_CI}" && -z "${ROLESPEC_ROLE_SOURCE}" ]]; then
     error "A suitable role was not found, try running 'rolespec -h' for help"
   fi
 }
@@ -24,16 +24,16 @@ enforce_test_exists() {
 }
 
 clone_url() {
-  if [[ -n "${ROLESPEC_TRAVIS}" ]]; then
+  if [[ -n "${ROLESPEC_CI}" ]]; then
     rolespec_run "Git clone ${ROLESPEC_ROLE_SOURCE}"
 
     # Avoid clone path conflicts
-    if [[ -d "${ROLESPEC_TRAVIS_TESTS}" ]]; then
-      rm -rf "${ROLESPEC_TRAVIS_TESTS}"
-      mkdir -p "${ROLESPEC_TRAVIS_TESTS}"
+    if [[ -d "${ROLESPEC_CI_TESTS}" ]]; then
+      rm -rf "${ROLESPEC_CI_TESTS}"
+      mkdir -p "${ROLESPEC_CI_TESTS}"
     fi
 
-    git clone --depth 1 "${ROLESPEC_ROLE_SOURCE}" "${ROLESPEC_TRAVIS_TESTS}"
+    git clone --depth 1 "${ROLESPEC_ROLE_SOURCE}" "${ROLESPEC_CI_TESTS}"
     echo
   fi
 }
@@ -121,7 +121,7 @@ presetup() {
   enforce_arguments
   enforce_rolespec_directory
 
-  if [[ -n "$ROLESPEC_TRAVIS" ]]; then
+  if [[ -n "$ROLESPEC_CI" ]]; then
     clone_url
   else
     enforce_test_exists
