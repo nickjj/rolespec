@@ -41,7 +41,7 @@ install_ansible() {
   # Fix the paths for the Ansible binaries
   . "${ROLESPEC_ANSIBLE_INSTALL}/hacking/env-setup"
 
-  printf "[defaults]\nhostfile = %s\nroles_path = %s\n" \
+  printf "[defaults]\ninventory = %s\nroles_path = %s\n" \
     "${ROLESPEC_HOSTS}" \
     "${ROLESPEC_ANSIBLE_ROLES}" \
     > "${ROLESPEC_ANSIBLE_CONFIG}"
