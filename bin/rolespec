@@ -1,4 +1,5 @@
 #!/bin/bash
+# vim: set sw=2 sts=2 et:
 
 # rolespec: A shell based test library for Ansible
 # Copyright (C) 2014 Nick Janetakis <nick.janetakis@gmail.com>
@@ -41,13 +42,63 @@ enforce_working_directories() {
   fi
 }
 
+# Escape meta-characters used in grep basic regular expresion
+bre_quote() {
+  sed 's/[][\.$}*^]/\\&/g' <<< "$*"
+}
+
+find_local_role_or_test_dir() {
+  type=$1
+  case $type in
+    role)
+      local base_dir="$ROLESPEC_ROLES"
+      ;;
+    test)
+      local base_dir="$ROLESPEC_TESTS"
+      ;;
+    *)
+      echo "Unknown type: $type" >&2
+      exit 1
+  esac
+
+  local lowest_depth=
+  local dirs=()
+
+  while read -r depth dir; do
+    if [[ -n $lowest_depth && $depth != "$lowest_depth" ]]; then
+      break;
+    fi
+    lowest_depth=$depth
+    dirs+=("$dir")
+  done < <(
+    find -L "$base_dir" -type d -printf '%d %P\n' |
+    grep -w -e "$(bre_quote "${ROLESPEC_ROLE_NAME}")$" |
+    sort -n
+  )
+
+  count=${#dirs[@]}
+  if (( count > 1 )); then
+    (
+      IFS=$'\n'
+      echo -n "Multiple ${type}s matching '${ROLESPEC_ROLE_NAME}'"
+      echo -e "found in '${base_dir}': \n${dirs[*]}"
+    ) >&2
+    exit 1
+  fi
+  if (( count == 0 )); then
+    echo "No ${type} matching '${ROLESPEC_ROLE_NAME}' found in '${base_dir}'" >&2
+    exit 1
+  fi
+
+  echo "${dirs[0]}"
+}
+
 set_role_name() {
   if [[ -n "${ROLESPEC_TRAVIS}" ]]; then
     ROLESPEC_ROLE="$(basename "${TRAVIS_REPO_SLUG}")"
   else
     ROLESPEC_ROLE_NAME="${ROLESPEC_ROLE_SOURCE}"
-    ROLESPEC_ROLE="$(find -L "${ROLESPEC_ROLES}" -type d -printf '%P\n' | \
-                   grep "${ROLESPEC_ROLE_NAME}$")"
+    ROLESPEC_ROLE="$(find_local_role_or_test_dir role)"
   fi
 }
 
@@ -56,9 +107,7 @@ set_dynamic_paths() {
     ROLESPEC_TEST="${ROLESPEC_TRAVIS_TESTS}/${ROLESPEC_ROLE}"
     ROLESPEC_META="${TRAVIS_BUILD_DIR}/${ROLESPEC_META}"
   else
-    ROLESPEC_TEST="${ROLESPEC_TESTS}/$(\
-                   find -L "${ROLESPEC_TESTS}" -type d -printf '%P\n' | \
-                   grep "${ROLESPEC_ROLE_NAME}$")"
+    ROLESPEC_TEST="${ROLESPEC_TESTS}/$(find_local_role_or_test_dir test)"
     ROLESPEC_META="${ROLESPEC_TEST}/${ROLESPEC_META}"
   fi
 
